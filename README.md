@@ -30,8 +30,8 @@ Este projeto nasceu de uma **inspiração divina** e é desenvolvido como **obra
 
 ## 👥 Desenvolvimento
 
-**Desenvolvedor Principal:** [Seu Nome]  
-**Contribuidor Espiritual:** [Nome do Contribuidor]  
+**Desenvolvedor Principal:** Jose Roberto Brecio  
+**Contribuidor Espiritual:** BREBIN TECH  
 **Inspiração Divina:** Jesus Cristo e Nossa Senhora de Fátima
 
 ## 📞 Contato
