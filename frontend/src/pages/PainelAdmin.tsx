@@ -5,9 +5,10 @@ import {
   Upload, Image, MessageSquare, Calendar, AlertCircle,
   LogOut, Save, Trash2, Eye, Home, Bell, Settings,
   Type, X, Palette, Plus, FileText, Download, Globe,
-  Tv, Layout, Users
+  Tv, Layout, Users, CheckCircle
 } from 'lucide-react';
 
+// TIPOS DE DADOS
 interface CarrosselItem {
   id: string;
   imagem: string;
@@ -15,7 +16,7 @@ interface CarrosselItem {
   descricao?: string;
   ordem: number;
   ativo: boolean;
-  local: 'home' | 'eventos'; // NOVO: especifica onde o carrossel será exibido
+  local: 'home' | 'eventos-cinzas' | 'eventos-jubileu' | 'eventos-paixao';
 }
 
 interface RecadoItem {
@@ -26,14 +27,14 @@ interface RecadoItem {
   imagem?: string;
   dataCriacao: string;
   ativo: boolean;
-  categoria?: string;
+  categoria: string;
 }
 
 interface EventoItem {
   id: string;
   titulo: string;
   conteudo: string;
-  tipo: 'texto' | 'imagem' | 'carrossel';
+  tipo: 'texto' | 'imagem';
   imagem?: string;
   data: string;
   hora: string;
@@ -52,23 +53,32 @@ interface PopupItem {
   imagem?: string;
   ativo: boolean;
   intervalo: number;
+  dataExpiracao?: string;
 }
 
 export default function PainelAdmin() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<'carrossel' | 'recados' | 'eventos' | 'popups'>('carrossel');
-  const [carrosselTipo, setCarrosselTipo] = useState<'home' | 'eventos'>('home'); // NOVO: seleciona qual carrossel editar
+  const [carrosselTipo, setCarrosselTipo] = useState<'home' | 'eventos-cinzas' | 'eventos-jubileu' | 'eventos-paixao'>('home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Estados
+  // ESTADOS
   const [carrosselHome, setCarrosselHome] = useState<CarrosselItem[]>([]);
-  const [carrosselEventos, setCarrosselEventos] = useState<CarrosselItem[]>([]);
+  const [carrosselCinzas, setCarrosselCinzas] = useState<CarrosselItem[]>([]);
+  const [carrosselJubileu, setCarrosselJubileu] = useState<CarrosselItem[]>([]);
+  const [carrosselPaixao, setCarrosselPaixao] = useState<CarrosselItem[]>([]);
   const [recados, setRecados] = useState<RecadoItem[]>([]);
   const [eventos, setEventos] = useState<EventoItem[]>([]);
   const [popups, setPopups] = useState<PopupItem[]>([]);
   
-  // Formulários
+  // FORMULÁRIOS
+  const [novaFotoCarrossel, setNovaFotoCarrossel] = useState({
+    titulo: '',
+    descricao: '',
+    imagem: '' as string | null
+  });
+
   const [novoRecado, setNovoRecado] = useState<Omit<RecadoItem, 'id' | 'dataCriacao'>>({
     titulo: '',
     conteudo: '',
@@ -97,16 +107,11 @@ export default function PainelAdmin() {
     tipo: 'texto',
     imagem: '',
     ativo: true,
-    intervalo: 5
+    intervalo: 5,
+    dataExpiracao: ''
   });
 
-  const [novaFotoCarrossel, setNovaFotoCarrossel] = useState({
-    titulo: '',
-    descricao: '',
-    imagem: ''
-  });
-
-  // Cores pré-definidas
+  // CORES PRÉ-DEFINIDAS
   const coresBanner = [
     { nome: 'Roxo (Cinzas)', from: '#9333ea', to: '#7c3aed' },
     { nome: 'Amarelo (Jubileu)', from: '#f59e0b', to: '#d97706' },
@@ -116,7 +121,7 @@ export default function PainelAdmin() {
     { nome: 'Rosa (Misericórdia)', from: '#db2777', to: '#be185d' },
   ];
 
-  // Autenticação
+  // AUTENTICAÇÃO
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem('admin_token');
@@ -135,34 +140,31 @@ export default function PainelAdmin() {
     setTimeout(() => checkAuth(), 500);
   }, [navigate]);
 
-  // Carregar dados
+  // CARREGAR DADOS
   useEffect(() => {
     if (isAuthenticated) {
-      const carregarDados = () => {
-        const dados = localStorage.getItem('recados-santuario');
-        if (dados) {
-          try {
-            const parsed = JSON.parse(dados);
-            
-            // Separar carrosséis por local
-            const carrosselItems = parsed.filter((item: any) => item.tipo === 'carrossel');
-            const homeItems = carrosselItems.filter((item: any) => item.local === 'home');
-            const eventosItems = carrosselItems.filter((item: any) => item.local === 'eventos');
-            
-            setCarrosselHome(homeItems);
-            setCarrosselEventos(eventosItems);
-            setRecados(parsed.filter((item: any) => item.tipo === 'recado'));
-            setEventos(parsed.filter((item: any) => item.tipo === 'evento'));
-            setPopups(parsed.filter((item: any) => item.tipo === 'popup'));
-          } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-          }
-        }
-      };
-      
       carregarDados();
     }
   }, [isAuthenticated]);
+
+  const carregarDados = () => {
+    try {
+      const dados = localStorage.getItem('dados-santuario');
+      if (dados) {
+        const parsed = JSON.parse(dados);
+        
+        if (parsed.carrosselHome) setCarrosselHome(parsed.carrosselHome);
+        if (parsed.carrosselCinzas) setCarrosselCinzas(parsed.carrosselCinzas);
+        if (parsed.carrosselJubileu) setCarrosselJubileu(parsed.carrosselJubileu);
+        if (parsed.carrosselPaixao) setCarrosselPaixao(parsed.carrosselPaixao);
+        if (parsed.recados) setRecados(parsed.recados);
+        if (parsed.eventos) setEventos(parsed.eventos);
+        if (parsed.popups) setPopups(parsed.popups);
+      }
+    } catch (error) {
+      console.error('Erro ao carregar dados:', error);
+    }
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
@@ -170,62 +172,237 @@ export default function PainelAdmin() {
     navigate('/');
   };
 
-  // Salvar todos os dados
-  const salvarNoLocalStorage = () => {
-    const todosDados = [
-      ...carrosselHome.map(item => ({ ...item, tipo: 'carrossel', local: 'home' })),
-      ...carrosselEventos.map(item => ({ ...item, tipo: 'carrossel', local: 'eventos' })),
-      ...recados.map(item => ({ ...item, tipo: 'recado' })),
-      ...eventos.map(item => ({ ...item, tipo: 'evento' })),
-      ...popups.map(item => ({ ...item, tipo: 'popup' }))
-    ];
+  // SALVAR TODOS OS DADOS
+  const salvarDados = () => {
+    const dadosCompletos = {
+      carrosselHome,
+      carrosselCinzas,
+      carrosselJubileu,
+      carrosselPaixao,
+      recados,
+      eventos,
+      popups,
+      ultimaAtualizacao: new Date().toISOString()
+    };
     
-    localStorage.setItem('recados-santuario', JSON.stringify(todosDados));
+    localStorage.setItem('dados-santuario', JSON.stringify(dadosCompletos));
     alert('✅ Dados salvos com sucesso!');
   };
 
   // === FUNÇÕES CARROSSEL ===
-  const carrosselAtual = carrosselTipo === 'home' ? carrosselHome : carrosselEventos;
-  const setCarrosselAtual = carrosselTipo === 'home' ? setCarrosselHome : setCarrosselEventos;
-
-  const handleUploadFotoCarrossel = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files) {
-      const novasFotos: CarrosselItem[] = Array.from(files).map((file, index) => ({
-        id: Date.now() + index + '',
-        imagem: URL.createObjectURL(file),
-        titulo: novaFotoCarrossel.titulo || `Imagem ${carrosselAtual.length + index + 1}`,
-        descricao: novaFotoCarrossel.descricao,
-        ordem: carrosselAtual.length + index,
-        ativo: true,
-        local: carrosselTipo
-      }));
-      
-      setCarrosselAtual([...carrosselAtual, ...novasFotos]);
-      setNovaFotoCarrossel({ titulo: '', descricao: '', imagem: '' });
+  const getCarrosselAtual = () => {
+    switch (carrosselTipo) {
+      case 'home': return carrosselHome;
+      case 'eventos-cinzas': return carrosselCinzas;
+      case 'eventos-jubileu': return carrosselJubileu;
+      case 'eventos-paixao': return carrosselPaixao;
+      default: return carrosselHome;
     }
   };
 
-  const handleDeleteFotoCarrossel = (id: string) => {
-    if (window.confirm('Excluir esta imagem do carrossel?')) {
+  const setCarrosselAtual = (novosDados: CarrosselItem[]) => {
+    switch (carrosselTipo) {
+      case 'home': setCarrosselHome(novosDados); break;
+      case 'eventos-cinzas': setCarrosselCinzas(novosDados); break;
+      case 'eventos-jubileu': setCarrosselJubileu(novosDados); break;
+      case 'eventos-paixao': setCarrosselPaixao(novosDados); break;
+    }
+  };
+
+  const handleUploadFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      const reader = new FileReader();
+      
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const carrosselAtual = getCarrosselAtual();
+          const novaImagem: CarrosselItem = {
+            id: Date.now() + '',
+            imagem: event.target.result as string,
+            titulo: novaFotoCarrossel.titulo || `Imagem ${carrosselAtual.length + 1}`,
+            descricao: novaFotoCarrossel.descricao,
+            ordem: carrosselAtual.length,
+            ativo: true,
+            local: carrosselTipo
+          };
+          
+          setCarrosselAtual([...carrosselAtual, novaImagem]);
+          setNovaFotoCarrossel({ titulo: '', descricao: '', imagem: null });
+        }
+      };
+      
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteFoto = (id: string) => {
+    if (window.confirm('Excluir esta imagem?')) {
+      const carrosselAtual = getCarrosselAtual();
       setCarrosselAtual(carrosselAtual.filter(item => item.id !== id));
     }
   };
 
-  const handleToggleAtivoCarrossel = (id: string) => {
+  const handleToggleAtivoFoto = (id: string) => {
+    const carrosselAtual = getCarrosselAtual();
     setCarrosselAtual(carrosselAtual.map(item => 
       item.id === id ? { ...item, ativo: !item.ativo } : item
     ));
   };
 
-  // === FUNÇÕES RECADOS, EVENTOS E POPUPS (mantêm iguais) ===
-  // [Manter todas as funções anteriores de recados, eventos e popups]
+  // === FUNÇÕES RECADOS ===
+  const handleAddRecado = () => {
+    if (!novoRecado.titulo.trim() || !novoRecado.conteudo.trim()) {
+      alert('Preencha título e conteúdo!');
+      return;
+    }
 
-  // Exportar dados
+    const novoItem: RecadoItem = {
+      id: Date.now() + '',
+      ...novoRecado,
+      dataCriacao: new Date().toLocaleDateString('pt-BR')
+    };
+
+    setRecados([...recados, novoItem]);
+    setNovoRecado({
+      titulo: '',
+      conteudo: '',
+      tipo: 'texto',
+      imagem: '',
+      ativo: true,
+      categoria: 'geral'
+    });
+  };
+
+  const handleRecadoUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setNovoRecado({ ...novoRecado, imagem: event.target.result as string });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteRecado = (id: string) => {
+    if (window.confirm('Excluir este recado?')) {
+      setRecados(recados.filter(item => item.id !== id));
+    }
+  };
+
+  const handleToggleAtivoRecado = (id: string) => {
+    setRecados(recados.map(item => 
+      item.id === id ? { ...item, ativo: !item.ativo } : item
+    ));
+  };
+
+  // === FUNÇÕES EVENTOS ===
+  const handleAddEvento = () => {
+    if (!novoEvento.titulo.trim() || !novoEvento.data) {
+      alert('Preencha título e data!');
+      return;
+    }
+
+    const novoItem: EventoItem = {
+      id: Date.now() + '',
+      ...novoEvento,
+      dataCriacao: new Date().toLocaleDateString('pt-BR')
+    };
+
+    setEventos([...eventos, novoItem]);
+    setNovoEvento({
+      titulo: '',
+      conteudo: '',
+      tipo: 'texto',
+      imagem: '',
+      data: '',
+      hora: '',
+      local: '',
+      ativo: true,
+      corBanner: '#9333ea',
+      corBannerTo: '#7c3aed'
+    });
+  };
+
+  const handleEventoUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setNovoEvento({ ...novoEvento, imagem: event.target.result as string });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeleteEvento = (id: string) => {
+    if (window.confirm('Excluir este evento?')) {
+      setEventos(eventos.filter(item => item.id !== id));
+    }
+  };
+
+  // === FUNÇÕES POPUPS ===
+  const handleAddPopup = () => {
+    if (!novoPopup.titulo.trim() || !novoPopup.mensagem.trim()) {
+      alert('Preencha título e mensagem!');
+      return;
+    }
+
+    const novoItem: PopupItem = {
+      id: Date.now() + '',
+      ...novoPopup
+    };
+
+    setPopups([...popups, novoItem]);
+    setNovoPopup({
+      titulo: '',
+      mensagem: '',
+      tipo: 'texto',
+      imagem: '',
+      ativo: true,
+      intervalo: 5,
+      dataExpiracao: ''
+    });
+  };
+
+  const handlePopupUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setNovoPopup({ ...novoPopup, imagem: event.target.result as string });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleDeletePopup = (id: string) => {
+    if (window.confirm('Excluir este popup?')) {
+      setPopups(popups.filter(item => item.id !== id));
+    }
+  };
+
+  const handleToggleAtivoPopup = (id: string) => {
+    setPopups(popups.map(item => 
+      item.id === id ? { ...item, ativo: !item.ativo } : item
+    ));
+  };
+
+  // EXPORTAR DADOS
   const handleExportarDados = () => {
     const dados = {
       carrosselHome,
-      carrosselEventos,
+      carrosselCinzas,
+      carrosselJubileu,
+      carrosselPaixao,
       recados,
       eventos,
       popups,
@@ -241,11 +418,9 @@ export default function PainelAdmin() {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    
-    alert('📥 Dados exportados com sucesso!');
   };
 
-  // Loading
+  // LOADING
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -259,63 +434,52 @@ export default function PainelAdmin() {
 
   if (!isAuthenticated) return null;
 
-  return (
-    <div 
-      className="min-h-screen bg-gray-50 relative"
-      style={{
-        backgroundImage: "url('/lateralnova.png')", // ← NOVA IMAGEM DE FUNDO
-        backgroundPosition: 'right top',
-        backgroundRepeat: 'no-repeat',
-        backgroundSize: 'auto 100%',
-        backgroundAttachment: 'fixed'
-      }}
-    >
-      {/* Overlay suave */}
-      <div className="absolute inset-0 bg-white/95 z-0"></div>
+  const carrosselAtual = getCarrosselAtual();
+  const carrosselInfo = {
+    'home': { nome: 'Home Page', icon: Home, desc: 'Carrossel principal da página inicial' },
+    'eventos-cinzas': { nome: 'Cinzas 2025', icon: Users, desc: 'Carrossel da seção Cinzas' },
+    'eventos-jubileu': { nome: 'Jubileu 2025', icon: Calendar, desc: 'Carrossel da seção Jubileu' },
+    'eventos-paixao': { nome: 'Paixão de Cristo', icon: Bell, desc: 'Carrossel da seção Paixão' }
+  };
 
-      {/* Cabeçalho */}
-      <header className="bg-white shadow-sm border-b sticky top-0 z-10">
-        <div className="container mx-auto px-4 py-3">
+  const Info = carrosselInfo[carrosselTipo];
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* CABEÇALHO */}
+      <header className="bg-white shadow-lg border-b sticky top-0 z-10">
+        <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center mr-3">
-                <Settings className="text-white" size={22} />
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-lg">
+                <Settings className="text-white" size={26} />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Painel Administrativo</h1>
-                <p className="text-xs text-gray-600">Santuário de Fátima</p>
+                <h1 className="text-2xl font-bold text-gray-900">Painel Administrativo</h1>
+                <p className="text-sm text-gray-600">Santuário Nossa Senhora de Fátima</p>
               </div>
             </div>
             
             <div className="flex items-center gap-3">
               <button
-                onClick={handleExportarDados}
-                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Exportar dados"
-              >
-                <Download size={18} />
-                <span className="hidden sm:inline">Exportar</span>
-              </button>
-              
-              <button
-                onClick={salvarNoLocalStorage}
-                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-              >
-                <Save size={18} />
-                <span className="hidden sm:inline">Salvar Tudo</span>
-              </button>
-              
-              <button
                 onClick={() => navigate('/')}
-                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <Home size={18} />
-                <span className="hidden sm:inline">Site</span>
+                <span>Visitar Site</span>
+              </button>
+              
+              <button
+                onClick={salvarDados}
+                className="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-md"
+              >
+                <Save size={18} />
+                <span>Salvar Tudo</span>
               </button>
               
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="flex items-center gap-2 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               >
                 <LogOut size={18} />
                 <span>Sair</span>
@@ -325,38 +489,24 @@ export default function PainelAdmin() {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 relative z-10">
-        {/* Cards de Estatísticas */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+      <main className="container mx-auto px-4 py-8">
+        {/* CARDS DE ESTATÍSTICAS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-blue-500">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Carrossel Home</p>
+                <p className="text-sm text-gray-500">Carrosséis</p>
                 <p className="text-2xl font-bold text-gray-800 mt-1">
-                  {carrosselHome.filter(item => item.ativo).length}/{carrosselHome.length}
+                  {carrosselHome.filter(i => i.ativo).length + carrosselCinzas.filter(i => i.ativo).length + carrosselJubileu.filter(i => i.ativo).length + carrosselPaixao.filter(i => i.ativo).length}
                 </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
-                <Globe className="text-blue-600" size={24} />
+                <Image className="text-blue-600" size={24} />
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Carrossel Eventos</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">
-                  {carrosselEventos.filter(item => item.ativo).length}/{carrosselEventos.length}
-                </p>
-              </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Tv className="text-purple-600" size={24} />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-green-500">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Recados Ativos</p>
@@ -370,7 +520,7 @@ export default function PainelAdmin() {
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-purple-500">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Eventos Ativos</p>
@@ -378,13 +528,13 @@ export default function PainelAdmin() {
                   {eventos.filter(item => item.ativo).length}/{eventos.length}
                 </p>
               </div>
-              <div className="p-3 bg-amber-100 rounded-lg">
-                <Calendar className="text-amber-600" size={24} />
+              <div className="p-3 bg-purple-100 rounded-lg">
+                <Calendar className="text-purple-600" size={24} />
               </div>
             </div>
           </div>
           
-          <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+          <div className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Popups Ativos</p>
@@ -399,237 +549,267 @@ export default function PainelAdmin() {
           </div>
         </div>
 
-        {/* Abas principais */}
-        <div className="mb-6 overflow-x-auto">
-          <div className="flex gap-2 pb-2 min-w-max">
+        {/* ABAS PRINCIPAIS */}
+        <div className="mb-6">
+          <div className="flex gap-2 pb-2 overflow-x-auto">
             {([
               { id: 'carrossel', label: 'Carrosséis', icon: Image },
               { id: 'recados', label: 'Recados', icon: MessageSquare },
               { id: 'eventos', label: 'Eventos', icon: Calendar },
-              { id: 'popups', label: 'Popups', icon: AlertCircle }
+              { id: 'popups', label: 'Popups', icon: Bell }
             ] as const).map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
                 onClick={() => setActiveTab(id)}
-                className={`px-4 py-3 font-medium rounded-lg whitespace-nowrap transition-colors ${
+                className={`flex items-center gap-2 px-5 py-3 font-medium rounded-lg whitespace-nowrap transition-colors ${
                   activeTab === id 
-                    ? 'bg-blue-600 text-white shadow' 
+                    ? 'bg-blue-600 text-white shadow-lg' 
                     : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-100 border'
                 }`}
               >
-                <div className="flex items-center gap-2">
-                  <Icon size={18} />
-                  {label}
-                </div>
+                <Icon size={18} />
+                {label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Conteúdo da Aba */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
+        {/* CONTEÚDO DAS ABAS */}
+        <div className="bg-white rounded-xl shadow-md border border-gray-200 p-6 mb-8">
           
           {/* CARROSSÉIS */}
           {activeTab === 'carrossel' && (
             <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Carrosséis</h2>
-              <p className="text-gray-600 mb-4 text-sm">Gerencie os carrosséis da Home e da página de Eventos</p>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Carrosséis</h2>
+              <p className="text-gray-600 mb-6">Gerencie os carrosséis de diferentes páginas</p>
               
-              {/* Seletor de Carrossel */}
-              <div className="flex gap-2 mb-6">
-                <button
-                  onClick={() => setCarrosselTipo('home')}
-                  className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center gap-2 ${
-                    carrosselTipo === 'home' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <Globe size={18} />
-                  Carrossel da Home
-                </button>
-                <button
-                  onClick={() => setCarrosselTipo('eventos')}
-                  className={`flex-1 py-3 rounded-lg font-medium flex items-center justify-center gap-2 ${
-                    carrosselTipo === 'eventos' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                  }`}
-                >
-                  <Tv size={18} />
-                  Carrossel de Eventos
-                </button>
+              {/* SELETOR DE CARROSSEL */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
+                {Object.entries(carrosselInfo).map(([tipo, info]) => (
+                  <button
+                    key={tipo}
+                    onClick={() => setCarrosselTipo(tipo as any)}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      carrosselTipo === tipo
+                        ? 'border-blue-500 bg-blue-50 shadow-md'
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`p-2 rounded-lg ${
+                        carrosselTipo === tipo ? 'bg-blue-100' : 'bg-gray-100'
+                      }`}>
+                        <info.icon size={20} className={
+                          carrosselTipo === tipo ? 'text-blue-600' : 'text-gray-600'
+                        } />
+                      </div>
+                      <div className="text-left">
+                        <h3 className="font-semibold text-gray-800">{info.nome}</h3>
+                        <p className="text-xs text-gray-500">{info.desc}</p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
               </div>
 
-              {/* Informação do carrossel selecionado */}
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                <div className="flex items-center gap-3">
-                  {carrosselTipo === 'home' ? (
-                    <>
-                      <Globe className="text-blue-600" size={24} />
-                      <div>
-                        <h3 className="font-bold text-blue-800">Carrossel da Página Principal</h3>
-                        <p className="text-sm text-blue-700">
-                          Estas imagens aparecem no carrossel da home page
-                        </p>
+              {/* INFO DO CARROSSEL SELECIONADO */}
+              <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-gray-50 rounded-xl border border-blue-200">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-blue-100 rounded-lg">
+                      <Info.icon className="text-blue-600" size={24} />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-lg text-gray-800">{Info.nome}</h3>
+                      <p className="text-gray-600">{Info.desc}</p>
+                      <div className="flex items-center gap-4 mt-2">
+                        <span className="text-sm text-gray-500">
+                          📸 {carrosselAtual.filter(i => i.ativo).length} ativas
+                        </span>
+                        <span className="text-sm text-gray-500">
+                          📁 {carrosselAtual.length} imagens
+                        </span>
                       </div>
-                    </>
-                  ) : (
-                    <>
-                      <Tv className="text-purple-600" size={24} />
-                      <div>
-                        <h3 className="font-bold text-purple-800">Carrossel da Página de Eventos</h3>
-                        <p className="text-sm text-purple-700">
-                          Estas imagens aparecem nas seções especiais (Cinzas, Jubileu, etc.)
-                        </p>
-                      </div>
-                    </>
-                  )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleExportarDados}
+                    className="flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-blue-600"
+                  >
+                    <Download size={16} />
+                    Exportar
+                  </button>
                 </div>
               </div>
 
-              {/* Upload */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Adicionar Imagens</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-500 transition-colors">
-                  <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm text-gray-600 mb-2">
-                    Selecione imagens para o carrossel {carrosselTipo === 'home' ? 'da Home' : 'de Eventos'}
-                  </p>
-                  <p className="text-xs text-gray-500 mb-3">
-                    {carrosselTipo === 'home' 
-                      ? 'Tamanho recomendado: 1920x800px' 
-                      : 'Tamanho recomendado: 1200x600px'}
-                  </p>
+              {/* FORMULÁRIO DE UPLOAD */}
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-gray-800 mb-3">Adicionar Imagens</h3>
+                <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 hover:border-blue-400 transition-colors">
+                  <div className="text-center mb-4">
+                    <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600 mb-1">Arraste imagens ou clique para selecionar</p>
+                    <p className="text-sm text-gray-500">Formatos: JPG, PNG, GIF • Tamanho recomendado: 1920x800px</p>
+                  </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                     <input
                       type="text"
                       value={novaFotoCarrossel.titulo}
                       onChange={(e) => setNovaFotoCarrossel({...novaFotoCarrossel, titulo: e.target.value})}
                       placeholder="Título da imagem (opcional)"
-                      className="p-2 border rounded text-sm"
+                      className="p-3 border rounded-lg text-sm"
                     />
                     <input
                       type="text"
                       value={novaFotoCarrossel.descricao}
                       onChange={(e) => setNovaFotoCarrossel({...novaFotoCarrossel, descricao: e.target.value})}
                       placeholder="Descrição (opcional)"
-                      className="p-2 border rounded text-sm"
+                      className="p-3 border rounded-lg text-sm"
                     />
                   </div>
                   
-                  <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm cursor-pointer hover:bg-blue-700 transition-colors">
-                    <Plus size={16} />
-                    Escolher Arquivos
-                    <input 
-                      type="file" 
-                      multiple 
-                      accept="image/*" 
-                      onChange={handleUploadFotoCarrossel} 
-                      className="hidden" 
-                    />
+                  <label className="block">
+                    <div className="flex items-center justify-center gap-3 px-6 py-3 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors">
+                      <Plus size={20} />
+                      Selecionar Arquivos
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        onChange={handleUploadFoto} 
+                        className="hidden" 
+                        multiple
+                      />
+                    </div>
                   </label>
                 </div>
               </div>
 
-              {/* Galeria */}
-              {carrosselAtual.length === 0 ? (
-                <div className="text-center py-10 text-gray-500">
-                  <Image className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>Nenhuma imagem neste carrossel</p>
-                  <p className="text-sm mt-1">Adicione imagens usando o botão acima</p>
+              {/* GALERIA DE IMAGENS */}
+              <div>
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-semibold text-gray-800">Imagens do Carrossel</h3>
+                  <span className="text-sm text-gray-500">
+                    {carrosselAtual.length} imagens • {carrosselAtual.filter(i => i.ativo).length} ativas
+                  </span>
                 </div>
-              ) : (
-                <div>
-                  <div className="flex justify-between items-center mb-3">
-                    <h3 className="font-bold text-gray-700">
-                      Imagens do Carrossel ({carrosselAtual.filter(item => item.ativo).length} ativas)
-                    </h3>
-                    <span className="text-sm text-gray-500">
-                      Total: {carrosselAtual.length} imagens
-                    </span>
+                
+                {carrosselAtual.length === 0 ? (
+                  <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-xl">
+                    <Image className="w-16 h-16 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-500">Nenhuma imagem neste carrossel</p>
+                    <p className="text-sm text-gray-400 mt-1">Adicione imagens usando o formulário acima</p>
                   </div>
-                  
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {carrosselAtual.map((item) => (
-                      <div key={item.id} className="border rounded-lg overflow-hidden">
-                        <div className="relative">
+                      <div key={item.id} className="border rounded-xl overflow-hidden hover:shadow-lg transition-shadow">
+                        <div className="relative h-48 bg-gray-100">
                           <img 
                             src={item.imagem} 
-                            alt={item.titulo} 
-                            className="w-full h-40 object-cover"
+                            alt={item.titulo || 'Imagem'} 
+                            className="w-full h-full object-cover"
                           />
                           <div className="absolute top-2 right-2 flex gap-1">
-                            <button 
-                              onClick={() => handleToggleAtivoCarrossel(item.id)}
-                              className={`p-1 rounded-full ${item.ativo ? 'bg-green-500' : 'bg-red-500'}`}
+                            <button
+                              onClick={() => handleToggleAtivoFoto(item.id)}
+                              className={`p-1.5 rounded-full ${item.ativo ? 'bg-green-500' : 'bg-red-500'}`}
                               title={item.ativo ? 'Desativar' : 'Ativar'}
                             >
-                              <Eye size={12} className="text-white" />
+                              <Eye size={14} className="text-white" />
                             </button>
-                            <button 
-                              onClick={() => handleDeleteFotoCarrossel(item.id)}
-                              className="p-1 bg-red-500 rounded-full"
+                            <button
+                              onClick={() => handleDeleteFoto(item.id)}
+                              className="p-1.5 bg-red-500 rounded-full"
                               title="Excluir"
                             >
-                              <Trash2 size={12} className="text-white" />
+                              <Trash2 size={14} className="text-white" />
                             </button>
                           </div>
                         </div>
                         <div className="p-3">
                           <input
                             type="text"
-                            value={item.titulo}
+                            value={item.titulo || ''}
                             onChange={(e) => {
-                              setCarrosselAtual(carrosselAtual.map(i => 
+                              const novosDados = carrosselAtual.map(i => 
                                 i.id === item.id ? { ...i, titulo: e.target.value } : i
-                              ));
+                              );
+                              setCarrosselAtual(novosDados);
                             }}
-                            className="w-full text-sm border rounded px-2 py-1 mb-1"
-                            placeholder="Título da imagem"
+                            className="w-full p-2 border rounded text-sm mb-1"
+                            placeholder="Título"
                           />
-                          <div className="flex justify-between items-center text-xs text-gray-500">
-                            <span>Ordem: {item.ordem + 1}</span>
-                            <span className={item.ativo ? 'text-green-600' : 'text-red-600'}>
+                          <div className="flex justify-between items-center text-xs">
+                            <span className={`px-2 py-1 rounded ${item.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                               {item.ativo ? 'Ativo' : 'Inativo'}
                             </span>
+                            <span className="text-gray-500">Ordem: {item.ordem + 1}</span>
                           </div>
                         </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           )}
 
-          {/* RECADOS, EVENTOS E POPUPS */}
-          {/* [Manter o conteúdo anterior das outras abas aqui] */}
-          {/* ... */}
+          {/* RECADOS */}
+          {activeTab === 'recados' && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Recados</h2>
+              <p className="text-gray-600 mb-6">Os recados aparecem na página de Eventos</p>
+              
+              {/* [MANTENHA TODO O CÓDIGO ANTERIOR DE RECADOS AQUI] */}
+              {/* ... */}
+            </div>
+          )}
+
+          {/* EVENTOS */}
+          {activeTab === 'eventos' && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Eventos</h2>
+              <p className="text-gray-600 mb-6">Crie eventos especiais com banners coloridos</p>
+              
+              {/* [MANTENHA TODO O CÓDIGO ANTERIOR DE EVENTOS AQUI] */}
+              {/* ... */}
+            </div>
+          )}
+
+          {/* POPUPS */}
+          {activeTab === 'popups' && (
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Popups</h2>
+              <p className="text-gray-600 mb-6">Avisos que aparecem ao entrar no site</p>
+              
+              {/* [MANTENHA TODO O CÓDIGO ANTERIOR DE POPUPS AQUI] */}
+              {/* ... */}
+            </div>
+          )}
         </div>
 
-        {/* Botão para salvar tudo */}
-        <div className="text-center mt-6">
+        {/* BOTÃO SALVAR FINAL */}
+        <div className="text-center">
           <button
-            onClick={salvarNoLocalStorage}
-            className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg"
+            onClick={salvarDados}
+            className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-bold hover:from-green-600 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
           >
-            <Save size={20} />
-            Salvar Todas as Alterações
+            <Save size={22} />
+            SALVAR TODAS AS ALTERAÇÕES
           </button>
-          <p className="text-sm text-gray-600 mt-2">
-            As alterações só aparecerão no site após salvar
+          <p className="text-sm text-gray-600 mt-3">
+            Não esqueça de salvar para que as alterações apareçam no site!
           </p>
         </div>
       </main>
 
-      <footer className="mt-8 border-t bg-white py-4 relative z-10">
-        <div className="container mx-auto px-4 text-center text-gray-600 text-sm">
-          <p>© {new Date().getFullYear()} Santuário de Fátima - Painel Administrativo</p>
-          <p className="mt-1">Sistema de gestão de conteúdo</p>
-          <div className="mt-2 text-xs text-gray-500">
-            Usuário: {localStorage.getItem('admin_user') || 'Admin'} • Último acesso: {new Date().toLocaleDateString()}
+      <footer className="mt-12 border-t bg-white py-6">
+        <div className="container mx-auto px-4 text-center">
+          <p className="text-gray-700">© {new Date().getFullYear()} Santuário Nossa Senhora de Fátima</p>
+          <p className="text-sm text-gray-600 mt-1">Painel Administrativo v2.0</p>
+          <div className="mt-3 text-xs text-gray-500">
+            Última atualização: {new Date().toLocaleString('pt-BR')}
           </div>
         </div>
       </footer>
