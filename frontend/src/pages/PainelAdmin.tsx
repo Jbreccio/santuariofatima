@@ -1,4 +1,3 @@
-// pages/PainelAdmin.tsx - VERSÃO COM VERIFICAÇÃO DE AUTENTICAÇÃO
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -13,34 +12,121 @@ import {
   Eye,
   Home,
   Bell,
-  Settings
+  Settings,
+  Type,
+  X,
+  Palette,
+  Plus,
+  FileText,
+  Download
 } from 'lucide-react';
+
+interface RecadoItem {
+  id: string;
+  titulo: string;
+  conteudo: string;
+  tipo: 'texto' | 'imagem';
+  imagem?: string;
+  dataCriacao: string;
+  ativo: boolean;
+  categoria?: string;
+}
+
+interface EventoItem {
+  id: string;
+  titulo: string;
+  conteudo: string;
+  tipo: 'texto' | 'imagem' | 'carrossel';
+  imagem?: string;
+  data: string;
+  hora: string;
+  local: string;
+  dataCriacao: string;
+  ativo: boolean;
+  corBanner: string;
+  corBannerTo: string;
+}
+
+interface CarrosselHomeItem {
+  id: string;
+  imagem: string;
+  titulo?: string;
+  descricao?: string;
+  ordem: number;
+  ativo: boolean;
+}
+
+interface PopupItem {
+  id: string;
+  titulo: string;
+  mensagem: string;
+  tipo: 'texto' | 'imagem';
+  imagem?: string;
+  ativo: boolean;
+  intervalo: number;
+}
 
 export default function PainelAdmin() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'fotos' | 'recados' | 'eventos' | 'popups'>('fotos');
+  const [activeTab, setActiveTab] = useState<'carrossel-home' | 'recados' | 'eventos' | 'popups'>('carrossel-home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Estado para cada seção
-  const [fotos, setFotos] = useState<string[]>([]);
-  const [novoRecado, setNovoRecado] = useState('');
-  const [recados, setRecados] = useState<string[]>(['Recado de exemplo 1', 'Recado de exemplo 2']);
-  const [evento, setEvento] = useState({ titulo: '', data: '', descricao: '' });
-  const [popup, setPopup] = useState({ 
-    titulo: 'Aviso Importante', 
-    mensagem: 'Horários especiais neste final de semana!', 
-    ativo: true 
+  // Estados
+  const [carrosselHome, setCarrosselHome] = useState<CarrosselHomeItem[]>([]);
+  const [recados, setRecados] = useState<RecadoItem[]>([]);
+  const [eventos, setEventos] = useState<EventoItem[]>([]);
+  const [popups, setPopups] = useState<PopupItem[]>([]);
+  
+  // Formulários
+  const [novoRecado, setNovoRecado] = useState<Omit<RecadoItem, 'id' | 'dataCriacao'>>({
+    titulo: '',
+    conteudo: '',
+    tipo: 'texto',
+    imagem: '',
+    ativo: true,
+    categoria: 'geral'
   });
 
-  // Verificar autenticação ao carregar
+  const [novoEvento, setNovoEvento] = useState<Omit<EventoItem, 'id' | 'dataCriacao'>>({
+    titulo: '',
+    conteudo: '',
+    tipo: 'texto',
+    imagem: '',
+    data: '',
+    hora: '',
+    local: '',
+    ativo: true,
+    corBanner: '#9333ea', // Roxo padrão
+    corBannerTo: '#7c3aed' // Roxo mais escuro
+  });
+
+  const [novoPopup, setNovoPopup] = useState<Omit<PopupItem, 'id'>>({
+    titulo: '',
+    mensagem: '',
+    tipo: 'texto',
+    imagem: '',
+    ativo: true,
+    intervalo: 5
+  });
+
+  // Cores pré-definidas para banners
+  const coresBanner = [
+    { nome: 'Roxo (Cinzas)', from: '#9333ea', to: '#7c3aed' },
+    { nome: 'Amarelo (Jubileu)', from: '#f59e0b', to: '#d97706' },
+    { nome: 'Vermelho (Paixão)', from: '#dc2626', to: '#b91c1c' },
+    { nome: 'Verde (Esperança)', from: '#059669', to: '#047857' },
+    { nome: 'Azul (Maria)', from: '#2563eb', to: '#1d4ed8' },
+    { nome: 'Rosa (Misericórdia)', from: '#db2777', to: '#be185d' },
+  ];
+
+  // Autenticação
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem('admin_token');
       const user = localStorage.getItem('admin_user');
       
       if (!token || !user) {
-        // Não autenticado, redireciona para home
         navigate('/');
         return false;
       }
@@ -50,11 +136,37 @@ export default function PainelAdmin() {
       return true;
     };
 
-    // Pequeno delay para mostrar loading
-    setTimeout(() => {
-      checkAuth();
-    }, 500);
+    setTimeout(() => checkAuth(), 500);
   }, [navigate]);
+
+  // Carregar dados do localStorage
+  useEffect(() => {
+    if (isAuthenticated) {
+      const carregarDados = () => {
+        const dados = localStorage.getItem('recados-santuario');
+        if (dados) {
+          try {
+            const parsed = JSON.parse(dados);
+            
+            // Separar por tipo
+            const carrosselItems = parsed.filter((item: any) => item.tipo === 'carrossel-home');
+            const recadosItems = parsed.filter((item: any) => item.tipo === 'recado');
+            const eventosItems = parsed.filter((item: any) => item.tipo === 'evento');
+            const popupsItems = parsed.filter((item: any) => item.tipo === 'popup');
+            
+            setCarrosselHome(carrosselItems);
+            setRecados(recadosItems);
+            setEventos(eventosItems);
+            setPopups(popupsItems);
+          } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+          }
+        }
+      };
+      
+      carregarDados();
+    }
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
@@ -62,63 +174,221 @@ export default function PainelAdmin() {
     navigate('/');
   };
 
-  const handleUploadFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Função para salvar todos os dados no localStorage
+  const salvarNoLocalStorage = () => {
+    const todosDados = [
+      ...carrosselHome.map(item => ({ ...item, tipo: 'carrossel-home' as const })),
+      ...recados.map(item => ({ ...item, tipo: 'recado' as const })),
+      ...eventos.map(item => ({ ...item, tipo: 'evento' as const })),
+      ...popups.map(item => ({ ...item, tipo: 'popup' as const }))
+    ];
+    
+    localStorage.setItem('recados-santuario', JSON.stringify(todosDados));
+    alert('✅ Dados salvos com sucesso!');
+  };
+
+  // === CARROSSEL HOME ===
+  const handleUploadFotoCarrossel = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const newPhotos = Array.from(files).map(file => URL.createObjectURL(file));
-      setFotos([...fotos, ...newPhotos]);
-      alert(`${files.length} foto(s) adicionada(s) com sucesso!`);
+      const novasFotos: CarrosselHomeItem[] = Array.from(files).map((file, index) => ({
+        id: Date.now() + index + '',
+        imagem: URL.createObjectURL(file),
+        titulo: `Imagem ${carrosselHome.length + index + 1}`,
+        ordem: carrosselHome.length + index,
+        ativo: true
+      }));
+      
+      setCarrosselHome([...carrosselHome, ...novasFotos]);
     }
   };
 
+  const handleDeleteFotoCarrossel = (id: string) => {
+    if (window.confirm('Excluir esta imagem do carrossel?')) {
+      setCarrosselHome(carrosselHome.filter(item => item.id !== id));
+    }
+  };
+
+  const handleToggleAtivoCarrossel = (id: string) => {
+    setCarrosselHome(carrosselHome.map(item => 
+      item.id === id ? { ...item, ativo: !item.ativo } : item
+    ));
+  };
+
+  // === RECADOS ===
   const handleAddRecado = () => {
-    if (novoRecado.trim()) {
-      setRecados([...recados, novoRecado]);
-      setNovoRecado('');
-      alert('Recado adicionado com sucesso!');
-    }
-  };
-
-  const handleDeleteRecado = (index: number) => {
-    if (window.confirm('Tem certeza que deseja remover este recado?')) {
-      const novosRecados = recados.filter((_, i) => i !== index);
-      setRecados(novosRecados);
-      alert('Recado removido com sucesso!');
-    }
-  };
-
-  const handleSaveEvento = () => {
-    if (!evento.titulo || !evento.data) {
-      alert('Preencha pelo menos o título e a data do evento!');
+    if (!novoRecado.titulo.trim() || !novoRecado.conteudo.trim()) {
+      alert('Preencha título e conteúdo do recado!');
       return;
     }
-    alert(`✅ Evento salvo com sucesso!\n\nTítulo: ${evento.titulo}\nData: ${new Date(evento.data).toLocaleDateString()}\nDescrição: ${evento.descricao || '(sem descrição)'}`);
-    setEvento({ titulo: '', data: '', descricao: '' });
+
+    const novoItem: RecadoItem = {
+      id: Date.now() + '',
+      ...novoRecado,
+      dataCriacao: new Date().toLocaleDateString('pt-BR')
+    };
+
+    setRecados([...recados, novoItem]);
+    
+    // Limpar formulário
+    setNovoRecado({
+      titulo: '',
+      conteudo: '',
+      tipo: 'texto',
+      imagem: '',
+      ativo: true,
+      categoria: 'geral'
+    });
   };
 
-  const handleTogglePopup = () => {
-    const novoStatus = !popup.ativo;
-    setPopup({ ...popup, ativo: novoStatus });
-    alert(`Popup ${novoStatus ? 'ativado' : 'desativado'} com sucesso!`);
+  const handleRecadoUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNovoRecado({ ...novoRecado, imagem: URL.createObjectURL(file) });
+    }
   };
 
-  const handleSavePopup = () => {
-    if (!popup.titulo || !popup.mensagem) {
-      alert('Preencha o título e a mensagem do popup!');
+  const handleDeleteRecadoImagem = () => {
+    setNovoRecado({ ...novoRecado, imagem: '' });
+  };
+
+  const handleDeleteRecado = (id: string) => {
+    if (window.confirm('Excluir este recado?')) {
+      setRecados(recados.filter(item => item.id !== id));
+    }
+  };
+
+  const handleToggleAtivoRecado = (id: string) => {
+    setRecados(recados.map(item => 
+      item.id === id ? { ...item, ativo: !item.ativo } : item
+    ));
+  };
+
+  // === EVENTOS ===
+  const handleAddEvento = () => {
+    if (!novoEvento.titulo.trim() || !novoEvento.data || !novoEvento.conteudo.trim()) {
+      alert('Preencha título, data e conteúdo do evento!');
       return;
     }
-    alert('Popup salvo com sucesso!');
+
+    const novoItem: EventoItem = {
+      id: Date.now() + '',
+      ...novoEvento,
+      dataCriacao: new Date().toLocaleDateString('pt-BR')
+    };
+
+    setEventos([...eventos, novoItem]);
+    
+    // Limpar formulário
+    setNovoEvento({
+      titulo: '',
+      conteudo: '',
+      tipo: 'texto',
+      imagem: '',
+      data: '',
+      hora: '',
+      local: '',
+      ativo: true,
+      corBanner: '#9333ea',
+      corBannerTo: '#7c3aed'
+    });
   };
 
-  const handleDeleteFoto = (index: number) => {
-    if (window.confirm('Tem certeza que deseja excluir esta foto?')) {
-      const novasFotos = fotos.filter((_, i) => i !== index);
-      setFotos(novasFotos);
-      alert('Foto removida com sucesso!');
+  const handleEventoUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNovoEvento({ ...novoEvento, imagem: URL.createObjectURL(file) });
     }
   };
 
-  // Tela de loading
+  const handleDeleteEventoImagem = () => {
+    setNovoEvento({ ...novoEvento, imagem: '' });
+  };
+
+  const handleDeleteEvento = (id: string) => {
+    if (window.confirm('Excluir este evento?')) {
+      setEventos(eventos.filter(item => item.id !== id));
+    }
+  };
+
+  const handleToggleAtivoEvento = (id: string) => {
+    setEventos(eventos.map(item => 
+      item.id === id ? { ...item, ativo: !item.ativo } : item
+    ));
+  };
+
+  // === POPUP ===
+  const handleAddPopup = () => {
+    if (!novoPopup.titulo.trim() || !novoPopup.mensagem.trim()) {
+      alert('Preencha título e mensagem do popup!');
+      return;
+    }
+
+    const novoItem: PopupItem = {
+      id: Date.now() + '',
+      ...novoPopup
+    };
+
+    setPopups([...popups, novoItem]);
+    
+    // Limpar formulário
+    setNovoPopup({
+      titulo: '',
+      mensagem: '',
+      tipo: 'texto',
+      imagem: '',
+      ativo: true,
+      intervalo: 5
+    });
+  };
+
+  const handlePopupUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setNovoPopup({ ...novoPopup, imagem: URL.createObjectURL(file) });
+    }
+  };
+
+  const handleDeletePopupImagem = () => {
+    setNovoPopup({ ...novoPopup, imagem: '' });
+  };
+
+  const handleDeletePopup = (id: string) => {
+    if (window.confirm('Excluir este popup?')) {
+      setPopups(popups.filter(item => item.id !== id));
+    }
+  };
+
+  const handleToggleAtivoPopup = (id: string) => {
+    setPopups(popups.map(item => 
+      item.id === id ? { ...item, ativo: !item.ativo } : item
+    ));
+  };
+
+  // Exportar dados
+  const handleExportarDados = () => {
+    const dados = {
+      carrosselHome,
+      recados,
+      eventos,
+      popups,
+      exportadoEm: new Date().toISOString()
+    };
+    
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `dados-santuario-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    alert('📥 Dados exportados com sucesso!');
+  };
+
+  // Loading
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -130,13 +400,22 @@ export default function PainelAdmin() {
     );
   }
 
-  // Se não estiver autenticado
-  if (!isAuthenticated) {
-    return null; // Será redirecionado pelo useEffect
-  }
+  if (!isAuthenticated) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div 
+      className="min-h-screen bg-gray-50 relative"
+      style={{
+        backgroundImage: "url('https://i.imgur.com/7WjGcVh.png')",
+        backgroundPosition: 'right top',
+        backgroundRepeat: 'no-repeat',
+        backgroundSize: 'auto 80vh',
+        backgroundAttachment: 'fixed'
+      }}
+    >
+      {/* Overlay suave */}
+      <div className="absolute inset-0 bg-white/90 z-0"></div>
+
       {/* Cabeçalho */}
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3">
@@ -153,9 +432,25 @@ export default function PainelAdmin() {
             
             <div className="flex items-center gap-3">
               <button
+                onClick={handleExportarDados}
+                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Exportar dados"
+              >
+                <Download size={18} />
+                <span className="hidden sm:inline">Exportar</span>
+              </button>
+              
+              <button
+                onClick={salvarNoLocalStorage}
+                className="flex items-center gap-2 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+              >
+                <Save size={18} />
+                <span className="hidden sm:inline">Salvar Tudo</span>
+              </button>
+              
+              <button
                 onClick={() => navigate('/')}
                 className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Voltar para o site"
               >
                 <Home size={18} />
                 <span className="hidden sm:inline">Site</span>
@@ -173,15 +468,16 @@ export default function PainelAdmin() {
         </div>
       </header>
 
-      {/* Conteúdo Principal */}
-      <main className="container mx-auto px-4 py-6">
+      <main className="container mx-auto px-4 py-6 relative z-10">
         {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Fotos Ativas</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">{fotos.length}</p>
+                <p className="text-sm text-gray-500">Carrossel Home</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">
+                  {carrosselHome.filter(item => item.ativo).length}/{carrosselHome.length}
+                </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg">
                 <Image className="text-blue-600" size={24} />
@@ -192,8 +488,10 @@ export default function PainelAdmin() {
           <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Recados</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">{recados.length}</p>
+                <p className="text-sm text-gray-500">Recados Ativos</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">
+                  {recados.filter(item => item.ativo).length}/{recados.length}
+                </p>
               </div>
               <div className="p-3 bg-green-100 rounded-lg">
                 <MessageSquare className="text-green-600" size={24} />
@@ -204,9 +502,9 @@ export default function PainelAdmin() {
           <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Próximo Evento</p>
-                <p className="text-lg font-bold text-gray-800 mt-1">
-                  {evento.titulo || 'Nenhum'}
+                <p className="text-sm text-gray-500">Eventos Ativos</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">
+                  {eventos.filter(item => item.ativo).length}/{eventos.length}
                 </p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
@@ -218,9 +516,9 @@ export default function PainelAdmin() {
           <div className="bg-white rounded-xl shadow-sm p-5 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Popup</p>
-                <p className={`text-lg font-bold mt-1 ${popup.ativo ? 'text-green-600' : 'text-red-600'}`}>
-                  {popup.ativo ? 'Ativo' : 'Inativo'}
+                <p className="text-sm text-gray-500">Popups Ativos</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">
+                  {popups.filter(item => item.ativo).length}/{popups.length}
                 </p>
               </div>
               <div className="p-3 bg-yellow-100 rounded-lg">
@@ -230,379 +528,694 @@ export default function PainelAdmin() {
           </div>
         </div>
 
-        {/* Abas de Navegação */}
-        <div className="mb-6">
-          <div className="flex flex-wrap gap-2 border-b border-gray-200">
-            <button
-              onClick={() => setActiveTab('fotos')}
-              className={`px-4 py-3 font-medium rounded-t-lg transition-colors ${
-                activeTab === 'fotos' 
-                  ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Image size={18} />
-                Fotos
-              </div>
-            </button>
-            
-            <button
-              onClick={() => setActiveTab('recados')}
-              className={`px-4 py-3 font-medium rounded-t-lg transition-colors ${
-                activeTab === 'recados' 
-                  ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <MessageSquare size={18} />
-                Recados
-              </div>
-            </button>
-            
-            <button
-              onClick={() => setActiveTab('eventos')}
-              className={`px-4 py-3 font-medium rounded-t-lg transition-colors ${
-                activeTab === 'eventos' 
-                  ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Calendar size={18} />
-                Eventos
-              </div>
-            </button>
-            
-            <button
-              onClick={() => setActiveTab('popups')}
-              className={`px-4 py-3 font-medium rounded-t-lg transition-colors ${
-                activeTab === 'popups' 
-                  ? 'bg-white border-t border-l border-r border-gray-200 text-blue-600' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <AlertCircle size={18} />
-                Popup
-              </div>
-            </button>
+        {/* Abas */}
+        <div className="mb-6 overflow-x-auto">
+          <div className="flex gap-2 pb-2 min-w-max">
+            {([
+              { id: 'carrossel-home', label: 'Carrossel Home', icon: Image },
+              { id: 'recados', label: 'Recados', icon: MessageSquare },
+              { id: 'eventos', label: 'Eventos', icon: Calendar },
+              { id: 'popups', label: 'Popups', icon: AlertCircle }
+            ] as const).map(({ id, label, icon: Icon }) => (
+              <button
+                key={id}
+                onClick={() => setActiveTab(id)}
+                className={`px-4 py-3 font-medium rounded-lg whitespace-nowrap transition-colors ${
+                  activeTab === id 
+                    ? 'bg-blue-600 text-white shadow' 
+                    : 'bg-white text-gray-600 hover:text-gray-900 hover:bg-gray-100 border'
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <Icon size={18} />
+                  {label}
+                </div>
+              </button>
+            ))}
           </div>
         </div>
 
-        {/* Conteúdo da Aba Ativa */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        {/* Conteúdo da Aba */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
           
-          {/* ABA: GERENCIAR FOTOS */}
-          {activeTab === 'fotos' && (
+          {/* CARROSSEL HOME */}
+          {activeTab === 'carrossel-home' && (
             <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Fotos</h2>
-              <p className="text-gray-600 mb-6">Adicione, visualize ou remova fotos da galeria</p>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Carrossel da Home</h2>
+              <p className="text-gray-600 mb-4 text-sm">Adicione ou remova imagens do carrossel principal</p>
               
-              {/* Upload de Fotos */}
-              <div className="mb-8">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Adicionar Novas Fotos</h3>
+              {/* Upload */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Adicionar Imagens</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-500 transition-colors">
                   <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                  <p className="text-gray-600 mb-2">Clique para selecionar fotos</p>
-                  <p className="text-gray-500 text-sm mb-4">Formatos: JPG, PNG, GIF. Máx: 5MB por imagem</p>
-                  <label className="inline-block px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer transition-colors font-medium">
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleUploadFoto}
-                      className="hidden"
+                  <p className="text-sm text-gray-600 mb-2">Selecione imagens para o carrossel (JPG/PNG)</p>
+                  <p className="text-xs text-gray-500 mb-3">Tamanho recomendado: 1920x800px</p>
+                  <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm cursor-pointer hover:bg-blue-700 transition-colors">
+                    <Plus size={16} />
+                    Escolher Arquivos
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      onChange={handleUploadFotoCarrossel} 
+                      className="hidden" 
                     />
-                    Selecionar Fotos
                   </label>
                 </div>
               </div>
 
-              {/* Galeria de Fotos */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-800">Fotos Ativas</h3>
-                  <span className="text-gray-600">{fotos.length} foto(s)</span>
+              {/* Galeria */}
+              {carrosselHome.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <Image className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>Nenhuma imagem no carrossel</p>
+                  <p className="text-sm mt-1">Adicione imagens usando o botão acima</p>
                 </div>
-                
-                {fotos.length === 0 ? (
-                  <div className="text-center py-10">
-                    <Image className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">Nenhuma foto adicionada ainda.</p>
-                    <p className="text-gray-400 text-sm mt-1">Adicione fotos usando o botão acima.</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {fotos.map((foto, index) => (
-                      <div key={index} className="relative group">
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {carrosselHome.map((item) => (
+                    <div key={item.id} className="border rounded-lg overflow-hidden">
+                      <div className="relative">
                         <img 
-                          src={foto} 
-                          alt={`Foto ${index + 1}`}
-                          className="w-full h-48 object-cover rounded-lg shadow-sm"
+                          src={item.imagem} 
+                          alt={item.titulo} 
+                          className="w-full h-40 object-cover"
                         />
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                        <div className="absolute top-2 right-2 flex gap-1">
                           <button 
-                            className="p-2 bg-white/20 hover:bg-white/30 rounded-full backdrop-blur-sm"
-                            onClick={() => window.open(foto, '_blank')}
+                            onClick={() => handleToggleAtivoCarrossel(item.id)}
+                            className={`p-1 rounded-full ${item.ativo ? 'bg-green-500' : 'bg-red-500'}`}
+                            title={item.ativo ? 'Desativar' : 'Ativar'}
                           >
-                            <Eye size={16} className="text-white" />
+                            <Eye size={12} className="text-white" />
                           </button>
                           <button 
-                            onClick={() => handleDeleteFoto(index)}
-                            className="p-2 bg-red-500 hover:bg-red-600 rounded-full"
+                            onClick={() => handleDeleteFotoCarrossel(item.id)}
+                            className="p-1 bg-red-500 rounded-full"
+                            title="Excluir"
                           >
-                            <Trash2 size={16} className="text-white" />
+                            <Trash2 size={12} className="text-white" />
                           </button>
                         </div>
-                        <div className="absolute bottom-2 left-2 bg-black/70 text-white text-xs px-2 py-1 rounded">
-                          #{index + 1}
-                        </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ABA: GERENCIAR RECADOS */}
-          {activeTab === 'recados' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Recados</h2>
-              <p className="text-gray-600 mb-6">Adicione ou remova recados importantes</p>
-              
-              {/* Adicionar novo recado */}
-              <div className="mb-8">
-                <h3 className="text-lg font-medium text-gray-800 mb-4">Adicionar Novo Recado</h3>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <input
-                    type="text"
-                    value={novoRecado}
-                    onChange={(e) => setNovoRecado(e.target.value)}
-                    placeholder="Digite o novo recado..."
-                    className="flex-1 p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                  <button
-                    onClick={handleAddRecado}
-                    disabled={!novoRecado.trim()}
-                    className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                  >
-                    <MessageSquare size={18} />
-                    Adicionar Recado
-                  </button>
-                </div>
-              </div>
-
-              {/* Lista de recados */}
-              <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-lg font-medium text-gray-800">Recados Ativos</h3>
-                  <span className="text-gray-600">{recados.length} recado(s)</span>
-                </div>
-                
-                {recados.length === 0 ? (
-                  <div className="text-center py-10">
-                    <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-3" />
-                    <p className="text-gray-500">Nenhum recado adicionado ainda.</p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recados.map((recado, index) => (
-                      <div key={index} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                            <span className="text-sm text-gray-500">Recado #{index + 1}</span>
-                          </div>
-                          <p className="text-gray-800">{recado}</p>
+                      <div className="p-3">
+                        <input
+                          type="text"
+                          value={item.titulo}
+                          onChange={(e) => {
+                            setCarrosselHome(carrosselHome.map(i => 
+                              i.id === item.id ? { ...i, titulo: e.target.value } : i
+                            ));
+                          }}
+                          className="w-full text-sm border rounded px-2 py-1 mb-1"
+                          placeholder="Título da imagem"
+                        />
+                        <div className="flex justify-between items-center text-xs text-gray-500">
+                          <span>Ordem: {item.ordem + 1}</span>
+                          <span className={item.ativo ? 'text-green-600' : 'text-red-600'}>
+                            {item.ativo ? 'Ativo' : 'Inativo'}
+                          </span>
                         </div>
-                        <button 
-                          onClick={() => handleDeleteRecado(index)}
-                          className="ml-4 p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
-                          title="Remover recado"
-                        >
-                          <Trash2 size={18} />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* ABA: GERENCIAR EVENTOS */}
-          {activeTab === 'eventos' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Eventos</h2>
-              <p className="text-gray-600 mb-6">Cadastre eventos especiais do Santuário</p>
-              
-              <div className="max-w-2xl space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Título do Evento *
-                  </label>
-                  <input
-                    type="text"
-                    value={evento.titulo}
-                    onChange={(e) => setEvento({...evento, titulo: e.target.value})}
-                    placeholder="Ex: Missa Dominical Especial"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Data e Hora do Evento *
-                  </label>
-                  <input
-                    type="datetime-local"
-                    value={evento.data}
-                    onChange={(e) => setEvento({...evento, data: e.target.value})}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Descrição do Evento
-                  </label>
-                  <textarea
-                    value={evento.descricao}
-                    onChange={(e) => setEvento({...evento, descricao: e.target.value})}
-                    placeholder="Descreva detalhes do evento..."
-                    rows={4}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-
-                <div className="flex gap-4 pt-2">
-                  <button
-                    onClick={handleSaveEvento}
-                    disabled={!evento.titulo || !evento.data}
-                    className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-                  >
-                    <Calendar size={18} />
-                    Salvar Evento
-                  </button>
-                  
-                  <button
-                    onClick={() => setEvento({ titulo: '', data: '', descricao: '' })}
-                    className="px-6 py-3 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 transition-colors font-medium"
-                  >
-                    Limpar
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* ABA: GERENCIAR POPUP */}
-          {activeTab === 'popups' && (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Gerenciar Popup</h2>
-              <p className="text-gray-600 mb-6">Configure mensagens importantes que aparecem no site</p>
-              
-              <div className="max-w-2xl space-y-6">
-                {/* Pré-visualização */}
-                <div className="p-6 border-2 border-dashed border-gray-300 rounded-xl bg-gray-50">
-                  <h3 className="text-lg font-medium text-gray-800 mb-4">Pré-visualização do Popup</h3>
-                  
-                  <div className="bg-white border border-gray-300 rounded-lg p-6 shadow-sm">
-                    <div className="flex justify-between items-start mb-4">
-                      <h4 className="text-xl font-bold text-gray-800">
-                        {popup.titulo || "Título do Popup"}
-                      </h4>
-                      <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${popup.ativo ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                        <span className={`text-sm font-medium ${popup.ativo ? 'text-green-600' : 'text-red-600'}`}>
-                          {popup.ativo ? '● Ativo' : '● Inativo'}
-                        </span>
                       </div>
                     </div>
-                    <p className="text-gray-700">
-                      {popup.mensagem || "Mensagem do popup aparecerá aqui."}
-                    </p>
-                  </div>
+                  ))}
                 </div>
+              )}
+            </div>
+          )}
 
-                {/* Formulário de edição */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Título do Popup *
-                  </label>
+          {/* RECADOS */}
+          {activeTab === 'recados' && (
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Recados</h2>
+              <p className="text-gray-600 mb-4 text-sm">Os recados aparecem na página de Eventos</p>
+
+              {/* Formulário de novo recado */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="font-bold text-gray-700 mb-3">Novo Recado</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => setNovoRecado({ ...novoRecado, tipo: 'texto' })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                        novoRecado.tipo === 'texto' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
+                      }`}
+                    >
+                      <FileText size={14} /> Modo Texto
+                    </button>
+                    <button
+                      onClick={() => setNovoRecado({ ...novoRecado, tipo: 'imagem' })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                        novoRecado.tipo === 'imagem' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
+                      }`}
+                    >
+                      <Image size={14} /> Modo Imagem
+                    </button>
+                  </div>
+
                   <input
                     type="text"
-                    value={popup.titulo}
-                    onChange={(e) => setPopup({...popup, titulo: e.target.value})}
-                    placeholder="Ex: Atenção! Horários Especiais"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
+                    value={novoRecado.titulo}
+                    onChange={(e) => setNovoRecado({ ...novoRecado, titulo: e.target.value })}
+                    placeholder="Título do recado"
+                    className="w-full p-3 border border-gray-300 rounded-lg"
                   />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Mensagem do Popup *
-                  </label>
-                  <textarea
-                    value={popup.mensagem}
-                    onChange={(e) => setPopup({...popup, mensagem: e.target.value})}
-                    placeholder="Digite a mensagem importante..."
-                    rows={4}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
+                  {novoRecado.tipo === 'texto' ? (
+                    <textarea
+                      value={novoRecado.conteudo}
+                      onChange={(e) => setNovoRecado({ ...novoRecado, conteudo: e.target.value })}
+                      placeholder="Conteúdo do recado..."
+                      rows={4}
+                      className="w-full p-3 border border-gray-300 rounded-lg"
+                    />
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Imagem do Recado</label>
+                      {novoRecado.imagem ? (
+                        <div className="relative inline-block">
+                          <img src={novoRecado.imagem} alt="Preview" className="h-40 object-contain border rounded-lg" />
+                          <button
+                            onClick={handleDeleteRecadoImagem}
+                            className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
+                          >
+                            <X size={14} className="text-white" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-500">
+                          <Upload size={24} className="text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-600">Clique para enviar imagem</span>
+                          <span className="text-xs text-gray-500 mt-1">JPG, PNG, GIF</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleRecadoUploadImagem}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
 
-                <div className="flex flex-col sm:flex-row gap-4 pt-2">
-                  <button
-                    onClick={handleTogglePopup}
-                    className={`flex-1 py-3 rounded-lg transition-colors flex items-center justify-center gap-2 font-medium ${
-                      popup.ativo 
-                        ? 'bg-red-600 hover:bg-red-700 text-white' 
-                        : 'bg-green-600 hover:bg-green-700 text-white'
-                    }`}
-                  >
-                    {popup.ativo ? (
-                      <>
-                        <AlertCircle size={18} />
-                        Desativar Popup
-                      </>
-                    ) : (
-                      <>
-                        <AlertCircle size={18} />
-                        Ativar Popup
-                      </>
-                    )}
-                  </button>
-                  
-                  <button
-                    onClick={handleSavePopup}
-                    disabled={!popup.titulo || !popup.mensagem}
-                    className="flex-1 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Save size={18} />
-                    Salvar Alterações
-                  </button>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddRecado}
+                      disabled={!novoRecado.titulo.trim() || !novoRecado.conteudo.trim()}
+                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Plus size={18} />
+                        Adicionar Recado
+                      </div>
+                    </button>
+                  </div>
                 </div>
               </div>
+
+              {/* Lista de recados existentes */}
+              <h3 className="font-bold text-gray-700 mb-3">Recados Existentes ({recados.length})</h3>
+              
+              {recados.length === 0 ? (
+                <p className="text-gray-500 text-center py-6">Nenhum recado cadastrado</p>
+              ) : (
+                <div className="space-y-4">
+                  {recados.map((recado) => (
+                    <div key={recado.id} className="border rounded-lg p-4 hover:border-blue-300">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-800">{recado.titulo}</h4>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className={`text-xs px-2 py-1 rounded-full ${recado.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {recado.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                            <span className="text-xs text-gray-500">{recado.dataCriacao}</span>
+                            <span className="text-xs text-gray-500">{recado.tipo === 'texto' ? '📝 Texto' : '🖼️ Imagem'}</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleToggleAtivoRecado(recado.id)}
+                            className={`p-2 rounded ${recado.ativo ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
+                            title={recado.ativo ? 'Desativar' : 'Ativar'}
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRecado(recado.id)}
+                            className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                            title="Excluir"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      {recado.tipo === 'texto' ? (
+                        <p className="text-gray-700 text-sm">{recado.conteudo}</p>
+                      ) : recado.imagem && (
+                        <div className="mt-2">
+                          <img src={recado.imagem} alt={recado.titulo} className="h-40 object-contain rounded" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* EVENTOS */}
+          {activeTab === 'eventos' && (
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Eventos</h2>
+              <p className="text-gray-600 mb-4 text-sm">Eventos especiais do Santuário (aparecem na página de Eventos)</p>
+
+              {/* Formulário de novo evento */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="font-bold text-gray-700 mb-3">Novo Evento</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => setNovoEvento({ ...novoEvento, tipo: 'texto' })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                        novoEvento.tipo === 'texto' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
+                      }`}
+                    >
+                      <FileText size={14} /> Modo Texto
+                    </button>
+                    <button
+                      onClick={() => setNovoEvento({ ...novoEvento, tipo: 'imagem' })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                        novoEvento.tipo === 'imagem' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
+                      }`}
+                    >
+                      <Image size={14} /> Modo Imagem
+                    </button>
+                    <button
+                      onClick={() => setNovoEvento({ ...novoEvento, tipo: 'carrossel' })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                        novoEvento.tipo === 'carrossel' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
+                      }`}
+                    >
+                      <Image size={14} /> Carrossel
+                    </button>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={novoEvento.titulo}
+                    onChange={(e) => setNovoEvento({ ...novoEvento, titulo: e.target.value })}
+                    placeholder="Título do evento (ex: Paixão de Cristo)"
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                  />
+
+                  {/* Seletor de cores do banner */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Cor do Banner</label>
+                    <div className="flex flex-wrap gap-2">
+                      {coresBanner.map((cor) => (
+                        <button
+                          key={cor.nome}
+                          onClick={() => setNovoEvento({ 
+                            ...novoEvento, 
+                            corBanner: cor.from, 
+                            corBannerTo: cor.to 
+                          })}
+                          className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                            novoEvento.corBanner === cor.from 
+                              ? 'ring-2 ring-blue-500' 
+                              : 'border-gray-300'
+                          }`}
+                          title={cor.nome}
+                        >
+                          <div 
+                            className="w-6 h-6 rounded" 
+                            style={{ 
+                              background: `linear-gradient(135deg, ${cor.from}, ${cor.to})` 
+                            }}
+                          />
+                          <span className="text-sm">{cor.nome}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
+                      <input
+                        type="date"
+                        value={novoEvento.data}
+                        onChange={(e) => setNovoEvento({ ...novoEvento, data: e.target.value })}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Hora</label>
+                      <input
+                        type="time"
+                        value={novoEvento.hora}
+                        onChange={(e) => setNovoEvento({ ...novoEvento, hora: e.target.value })}
+                        className="w-full p-2.5 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Local</label>
+                      <input
+                        type="text"
+                        value={novoEvento.local}
+                        onChange={(e) => setNovoEvento({ ...novoEvento, local: e.target.value })}
+                        placeholder="Local do evento"
+                        className="w-full p-2.5 border border-gray-300 rounded-lg text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {novoEvento.tipo === 'texto' ? (
+                    <textarea
+                      value={novoEvento.conteudo}
+                      onChange={(e) => setNovoEvento({ ...novoEvento, conteudo: e.target.value })}
+                      placeholder="Descrição detalhada do evento..."
+                      rows={4}
+                      className="w-full p-3 border border-gray-300 rounded-lg"
+                    />
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        {novoEvento.tipo === 'imagem' ? 'Imagem do Evento' : 'Imagens para Carrossel'}
+                      </label>
+                      {novoEvento.imagem ? (
+                        <div className="relative inline-block">
+                          <img src={novoEvento.imagem} alt="Preview" className="h-40 object-contain border rounded-lg" />
+                          <button
+                            onClick={handleDeleteEventoImagem}
+                            className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
+                          >
+                            <X size={14} className="text-white" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-500">
+                          <Upload size={24} className="text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-600">
+                            {novoEvento.tipo === 'imagem' 
+                              ? 'Clique para enviar imagem' 
+                              : 'Clique para enviar imagens para o carrossel'}
+                          </span>
+                          <span className="text-xs text-gray-500 mt-1">JPG, PNG</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleEventoUploadImagem}
+                            className="hidden"
+                            multiple={novoEvento.tipo === 'carrossel'}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddEvento}
+                      disabled={!novoEvento.titulo.trim() || !novoEvento.data || !novoEvento.conteudo.trim()}
+                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Plus size={18} />
+                        Adicionar Evento
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de eventos existentes */}
+              <h3 className="font-bold text-gray-700 mb-3">Eventos Existentes ({eventos.length})</h3>
+              
+              {eventos.length === 0 ? (
+                <p className="text-gray-500 text-center py-6">Nenhum evento cadastrado</p>
+              ) : (
+                <div className="space-y-4">
+                  {eventos.map((evento) => (
+                    <div key={evento.id} className="border rounded-lg p-4 hover:border-blue-300">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-800">{evento.titulo}</h4>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className={`text-xs px-2 py-1 rounded-full ${evento.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {evento.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                            <span className="text-xs text-gray-500">{evento.dataCriacao}</span>
+                            <span className="text-xs text-gray-500">
+                              {evento.tipo === 'texto' ? '📝 Texto' : evento.tipo === 'imagem' ? '🖼️ Imagem' : '🎞️ Carrossel'}
+                            </span>
+                            <div 
+                              className="w-4 h-4 rounded-full border" 
+                              style={{ 
+                                background: `linear-gradient(135deg, ${evento.corBanner}, ${evento.corBannerTo})` 
+                              }}
+                              title="Cor do banner"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleToggleAtivoEvento(evento.id)}
+                            className={`p-2 rounded ${evento.ativo ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
+                            title={evento.ativo ? 'Desativar' : 'Ativar'}
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEvento(evento.id)}
+                            className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                            title="Excluir"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                        <div className="text-sm">
+                          <span className="font-medium">Data: </span>
+                          <span className="text-gray-700">{evento.data}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="font-medium">Hora: </span>
+                          <span className="text-gray-700">{evento.hora || 'Não definida'}</span>
+                        </div>
+                        <div className="text-sm">
+                          <span className="font-medium">Local: </span>
+                          <span className="text-gray-700">{evento.local || 'Não definido'}</span>
+                        </div>
+                      </div>
+                      
+                      {evento.tipo === 'texto' ? (
+                        <p className="text-gray-700 text-sm">{evento.conteudo}</p>
+                      ) : evento.imagem && (
+                        <div className="mt-2">
+                          <img src={evento.imagem} alt={evento.titulo} className="h-40 object-contain rounded" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* POPUPS */}
+          {activeTab === 'popups' && (
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Popups</h2>
+              <p className="text-gray-600 mb-4 text-sm">Avisos que aparecem ao entrar no site</p>
+
+              {/* Formulário de novo popup */}
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="font-bold text-gray-700 mb-3">Novo Popup</h3>
+                
+                <div className="space-y-4">
+                  <div className="flex gap-2 mb-3">
+                    <button
+                      onClick={() => setNovoPopup({ ...novoPopup, tipo: 'texto' })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                        novoPopup.tipo === 'texto' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
+                      }`}
+                    >
+                      <FileText size={14} /> Modo Texto
+                    </button>
+                    <button
+                      onClick={() => setNovoPopup({ ...novoPopup, tipo: 'imagem' })}
+                      className={`flex-1 py-2 rounded-lg text-sm font-medium flex items-center justify-center gap-2 ${
+                        novoPopup.tipo === 'imagem' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
+                      }`}
+                    >
+                      <Image size={14} /> Modo Imagem
+                    </button>
+                  </div>
+
+                  <input
+                    type="text"
+                    value={novoPopup.titulo}
+                    onChange={(e) => setNovoPopup({ ...novoPopup, titulo: e.target.value })}
+                    placeholder="Título do popup"
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                  />
+
+                  <textarea
+                    value={novoPopup.mensagem}
+                    onChange={(e) => setNovoPopup({ ...novoPopup, mensagem: e.target.value })}
+                    placeholder="Mensagem do popup..."
+                    rows={3}
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                  />
+
+                  {novoPopup.tipo === 'imagem' && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Imagem do Popup</label>
+                      {novoPopup.imagem ? (
+                        <div className="relative inline-block">
+                          <img src={novoPopup.imagem} alt="Preview" className="h-40 object-contain border rounded-lg" />
+                          <button
+                            onClick={handleDeletePopupImagem}
+                            className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
+                          >
+                            <X size={14} className="text-white" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-500">
+                          <Upload size={24} className="text-gray-400 mb-2" />
+                          <span className="text-sm text-gray-600">Clique para enviar imagem</span>
+                          <span className="text-xs text-gray-500 mt-1">JPG, PNG</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handlePopupUploadImagem}
+                            className="hidden"
+                          />
+                        </label>
+                      )}
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Intervalo de exibição (segundos)
+                    </label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="30"
+                      value={novoPopup.intervalo}
+                      onChange={(e) => setNovoPopup({ ...novoPopup, intervalo: parseInt(e.target.value) })}
+                      className="w-full"
+                    />
+                    <div className="flex justify-between text-sm text-gray-600 mt-1">
+                      <span>1s</span>
+                      <span>{novoPopup.intervalo}s</span>
+                      <span>30s</span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddPopup}
+                      disabled={!novoPopup.titulo.trim() || !novoPopup.mensagem.trim()}
+                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Plus size={18} />
+                        Adicionar Popup
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Lista de popups existentes */}
+              <h3 className="font-bold text-gray-700 mb-3">Popups Existentes ({popups.length})</h3>
+              
+              {popups.length === 0 ? (
+                <p className="text-gray-500 text-center py-6">Nenhum popup cadastrado</p>
+              ) : (
+                <div className="space-y-4">
+                  {popups.map((popup) => (
+                    <div key={popup.id} className="border rounded-lg p-4 hover:border-blue-300">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-800">{popup.titulo}</h4>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className={`text-xs px-2 py-1 rounded-full ${popup.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {popup.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                            <span className="text-xs text-gray-500">{popup.tipo === 'texto' ? '📝 Texto' : '🖼️ Imagem'}</span>
+                            <span className="text-xs text-gray-500">Intervalo: {popup.intervalo}s</span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleToggleAtivoPopup(popup.id)}
+                            className={`p-2 rounded ${popup.ativo ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
+                            title={popup.ativo ? 'Desativar' : 'Ativar'}
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeletePopup(popup.id)}
+                            className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                            title="Excluir"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <p className="text-gray-700 text-sm mb-2">{popup.mensagem}</p>
+                      
+                      {popup.tipo === 'imagem' && popup.imagem && (
+                        <div className="mt-2">
+                          <img src={popup.imagem} alt={popup.titulo} className="h-40 object-contain rounded" />
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
         </div>
+
+        {/* Botão para salvar tudo */}
+        <div className="text-center mt-6">
+          <button
+            onClick={salvarNoLocalStorage}
+            className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg"
+          >
+            <Save size={20} />
+            Salvar Todas as Alterações
+          </button>
+          <p className="text-sm text-gray-600 mt-2">
+            As alterações só aparecerão no site após salvar
+          </p>
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="mt-8 border-t bg-white py-6">
-        <div className="container mx-auto px-4">
-          <div className="text-center text-gray-600">
-            <p className="font-medium">© {new Date().getFullYear()} Santuário de Fátima - Painel Administrativo</p>
-            <p className="text-sm mt-1">Sistema desenvolvido para gestão de conteúdo</p>
-            <div className="flex justify-center items-center gap-4 mt-4 text-xs text-gray-500">
-              <span>Usuário: {localStorage.getItem('admin_user') || 'Admin'}</span>
-              <span>•</span>
-              <span>Último acesso: {new Date().toLocaleDateString()}</span>
-            </div>
+      <footer className="mt-8 border-t bg-white py-4 relative z-10">
+        <div className="container mx-auto px-4 text-center text-gray-600 text-sm">
+          <p>© {new Date().getFullYear()} Santuário de Fátima - Painel Administrativo</p>
+          <p className="mt-1">Sistema de gestão de conteúdo</p>
+          <div className="mt-2 text-xs text-gray-500">
+            Usuário: {localStorage.getItem('admin_user') || 'Admin'} • Último acesso: {new Date().toLocaleDateString()}
+          </div>
+          <div className="mt-2 text-xs text-gray-500">
+            Total de itens: {carrosselHome.length + recados.length + eventos.length + popups.length}
           </div>
         </div>
       </footer>

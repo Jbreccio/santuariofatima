@@ -22,51 +22,64 @@ export default function Home() {
 
   return (
     <div className="min-h-screen flex flex-col bg-gray-50 pt-16">
+      
       {/* MENU FIXO */}
       <Navigation />
 
-      {/* HERO SECTION AJUSTADO */}
-      <section className="relative h-[70vh] sm:h-screen flex items-center justify-center overflow-hidden">
+      {/* HERO SECTION */}
+      <section className="relative h-[70vh] sm:h-screen flex items-center overflow-hidden">
 
+        {/* IMAGEM SEM FAIXAS PRETAS */}
         <img
           src="/FatimaAltar.png"
           alt="Nossa Senhora de Fátima"
           className="
-            absolute inset-0 w-full h-full object-cover
-            object-[center_25%]
-            sm:object-center
-            md:object-[center_40%]
+            absolute inset-0 
+            w-full h-full 
+            object-cover 
+            object-center
+            select-none
           "
         />
 
-        {/* Camada escura para contraste */}
+        {/* CAMADA ESCURA */}
         <div className="absolute inset-0 bg-black/40"></div>
 
-        <div className="relative z-10 text-center text-white px-4 sm:px-6 md:px-8">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4">
-            Santuário Nossa Senhora de Fátima
-          </h1>
-          <p className="text-base sm:text-lg md:text-xl lg:text-2xl mb-8 max-w-2xl mx-auto">
-            Bem-vindo ao nosso espaço de fé, comunidade e espiritualidade
-          </p>
+        {/* TEXTO NO LADO DIREITO */}
+        <div className="relative z-10 w-full flex justify-end px-6 md:px-16">
+          <div className="text-white text-right max-w-xl">
+
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6">
+              Santuário <br />
+              Nossa Senhora <br />
+              de Fátima
+            </h1>
+
+            <p className="text-base sm:text-lg md:text-xl lg:text-2xl leading-relaxed mt-4">
+              Bem-vindo ao nosso espaço de fé,<br />
+              comunidade e espiritualidade
+            </p>
+
+          </div>
         </div>
       </section>
 
-      {/* CARROSSEL FOTOS */}
+      {/* CARROSSEL */}
       <CarrosselFotos />
 
       {/* VATICAN NEWS */}
       <VaticanNewsSection />
 
-      {/* LITURGIA DIÁRIA */}
+      {/* LITURGIA */}
       <LiturgiaDiaria />
 
       {/* REDES SOCIAIS */}
       <SocialMediaPanel />
       
-      {/* POPUPS AUTOMÁTICOS */}
+      {/* POPUPS */}
       <RecadosHome />
 
+      {/* FOOTER */}
       <Footer />
     </div>
   );
