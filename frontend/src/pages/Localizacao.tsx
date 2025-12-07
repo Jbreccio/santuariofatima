@@ -208,11 +208,7 @@ export default function Localizacao() {
                     <span className="font-medium">Alto da Boa Vista</span>
                     <span className="text-sm text-gray-500">(1,5 km - 18 min a pé)</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="bg-yellow-500 text-white px-2 py-1 rounded text-xs font-bold">L9</span>
-                    <span className="font-medium">Jurubatuba</span>
-                    <span className="text-sm text-gray-500">(2,0 km - 25 min a pé/ônibus)</span>
-                  </div>
+                  
                 </div>
                 
                 <div className="bg-blue-50 p-3 rounded-lg mb-3">

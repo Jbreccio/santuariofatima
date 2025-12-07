@@ -491,42 +491,57 @@ export default function CalendarioLiturgico() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-100">
       <Navigation />
 
-      {/* Seção com imagem de fundo como faixa - RESPONSIVA */}
-      <section className="relative w-full overflow-hidden h-[250px] sm:h-[300px] md:h-[350px] lg:h-[400px] xl:h-[450px]">
-        <img 
-          src="/calendariofundo.png" 
-          alt="Fundo do Calendário Litúrgico"
-          className="absolute inset-0 w-full h-full object-cover object-[center_40%] sm:object-[center_45%] md:object-[center_50%]"
-          // Ajuste responsivo do ponto focal
-          // Mobile: 40% da altura
-          // Tablet: 45% da altura  
-          // Desktop: 50% da altura
-        />
-        
-        {/* Overlay para melhor legibilidade do texto */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/40 to-transparent" />
-        
-        {/* Conteúdo sobre a imagem - RESPONSIVO */}
-        <div className="relative z-10 h-full flex items-center justify-center">
-          <div className="text-center px-4">
-            <div className="inline-block mb-3 sm:mb-4">
-              <Calendar className="text-white mx-auto" size={36} sm:size={40} md:size={48} strokeWidth={1.5} />
-            </div>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 text-white">
-              Calendário Litúrgico 2026
-            </h1>
-            <p className="text-base sm:text-lg md:text-xl text-white/90 max-w-3xl mx-auto px-4">
-              Calendário completo da Igreja Católica - Ano 2026
-            </p>
-          </div>
+      {/* SEÇÃO COM IMAGEM DE FAIXA NO TOPO - COM ÍCONE FLUTUANTE */}
+<section className="relative w-full overflow-hidden bg-gray-900">
+  {/* CONTAINER - AJUSTE A ALTURA AQUI */}
+  <div className="relative h-[500px] sm:h-[500px] md:h-[500px] lg:h-[750px] overflow-hidden">
+    {/* Imagem como faixa */}
+    <img 
+      src="/images/carrosselFotos/entradaNovo2.png" 
+      alt="Entrada do Santuário - Calendário Litúrgico"
+      className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
+    />
+    
+    {/* Overlay gradiente */}
+    <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent" />
+    
+    {/* Conteúdo sobre a faixa - ÍCONE FLUTUANTE */}
+    <div className="relative z-10 h-full flex flex-col items-center justify-center">
+      
+      {/* ÍCONE FLUTUANTE ACIMA DO TEXTO */}
+      <div className="relative -top-4 sm:-top-6 md:-top-8 mb-2 sm:mb-3">
+        <div className="text-white">
+          <Calendar 
+            className="text-white" 
+            size={44} 
+            sm:size={56}
+            md:size={90}
+            strokeWidth={1.8} 
+          />
         </div>
-      </section>
+      </div>
+      
+      {/* FRASES ABAIXO DO ÍCONE */}
+      <div className="text-center px-4 max-w-4xl mx-auto">
+        <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg">
+          Calendário Litúrgico 2026
+        </h1>
+        <p className="text-lg sm:text-xl md:text-2xl text-white/90 max-w-3xl mx-auto px-4 drop-shadow-md">
+          Calendário completo da Igreja Católica - Ano 2026
+        </p>
+      </div>
+    </div>
+  </div>
+  
+  {/* Elemento decorativo na base da faixa */}
+  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purpl00"></div>
+</section>
 
       <main className="max-w-6xl mx-auto px-3 sm:px-4 md:px-6 py-6 sm:py-8 md:py-12">
         {/* Legenda das Cores Litúrgicas - RESPONSIVA */}
         <div className="bg-white rounded-lg sm:rounded-xl shadow-md sm:shadow-lg p-4 sm:p-6 mb-6 sm:mb-8 border border-gray-200">
           <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 flex items-center gap-2">
-            <BookOpen className="text-blue-600" size={20} sm:size={24} />
+            <BookOpen className="text-white-600" size={18} sm:size={24} />
             Legenda das Cores e Abreviaturas
           </h3>
           

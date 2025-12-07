@@ -26,10 +26,10 @@ export default function Home() {
       <Navigation />
 
       {/* HERO SECTION AJUSTADO */}
-      <section className="relative h-[85vh] sm:h-screen flex items-center justify-center overflow-hidden">
+      <section className="relative h-[70vh] sm:h-screen flex items-center justify-center overflow-hidden">
 
         <img
-          src="/nossa-senhora-fatima.png"
+          src="/FatimaAltar.png"
           alt="Nossa Senhora de Fátima"
           className="
             absolute inset-0 w-full h-full object-cover

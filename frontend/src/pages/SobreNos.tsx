@@ -36,9 +36,9 @@ export default function SobreNos() {
     },
     {
       funcao: "Vigário",
-      nome: "Padre Andreas",
+      nome: "Padre Andres",
       descricao: "Assistente do pároco e confessor",
-      imagem: "/padre-andreas-placeholder.png",
+      imagem: "/Andres.png",
     },
     {
       funcao: "Coordenadora",

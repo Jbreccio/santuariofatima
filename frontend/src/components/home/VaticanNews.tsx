@@ -120,59 +120,61 @@ export default function VaticanNewsSection() {
     }
   };
 
-  // ----------- FUNDO COM IMAGEM AQUI -----------
+  // ESTILO DO FUNDO MODIFICADO
   const sectionStyle = {
-    backgroundImage: "url('/fundovaticannews.png')",
+    backgroundImage: "url('/vaticanNewshome3.png')",
     backgroundSize: "cover",
-    backgroundPosition: "center",
-    backgroundRepeat: "no-repeat"
+    backgroundPosition: "center center",
+    backgroundRepeat: "no-repeat",
+    minHeight: "700px",
+    display: "flex",
+    alignItems: "center"
   };
-  // ---------------------------------------------
 
   if (loading) {
     return (
-      <section className="py-16 px-4" style={sectionStyle}>
-        <div className="max-w-7xl mx-auto">
-
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 mb-12">
-            <div className="text-left">
-              <h2 className="text-4xl md:text-5xl font-bold text-red-800 drop-shadow-xl">
-                Vatican News
-              </h2>
-              <p className="text-xl text-gray-100 mt-2 drop-shadow">
-                Notícias oficiais da Santa Sé
-              </p>
-            </div>
-
-            <div>
+      <section 
+        className="relative px-4 flex items-center justify-center"
+        style={sectionStyle}
+      >
+        {/* Overlay mais claro para melhor visibilidade */}
+        <div className="absolute inset-0 bg-black/10"></div>
+        
+        <div className="relative z-10 max-w-7xl mx-auto w-full">
+          <div className="flex justify-center mb-12">
+            <div className="h-24 w-auto max-w-full">
               <img
-                src="/images/vaticanNewshome/vaticanNewshom.png"
+                src="/vaticanNewsBanner.png"
                 alt="Vatican News"
-                className="h-24 w-auto opacity-90"
+                className="h-full w-auto object-contain opacity-80"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1, 2, 3, 4].map((item) => (
-              <div key={item} className="bg-white/70 backdrop-blur-sm rounded-xl p-6 shadow-lg animate-pulse">
-                <div className="h-4 bg-gray-200 rounded mb-4"></div>
-                <div className="h-3 bg-gray-200 rounded mb-2"></div>
-                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+              <div key={item} className="bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-lg animate-pulse">
+                <div className="h-4 bg-gray-300 rounded mb-4"></div>
+                <div className="h-3 bg-gray-300 rounded mb-2"></div>
+                <div className="h-3 bg-gray-300 rounded w-2/3"></div>
               </div>
             ))}
           </div>
-
         </div>
       </section>
     );
   }
 
   return (
-    <section className="py-16 px-4" style={sectionStyle}>
-      <div className="max-w-7xl mx-auto">
-
-        {/* LOGO CLICÁVEL - NOVO CÓDIGO */}
+    <section 
+      className="relative px-4 flex items-center justify-center py-12"
+      style={sectionStyle}
+    >
+      {/* Overlay leve para melhor contraste */}
+      <div className="absolute inset-0 bg-black/10"></div>
+      
+      <div className="relative z-10 max-w-7xl mx-auto w-full">
+        {/* LOGO CLICÁVEL */}
         <div className="flex justify-center mb-12">
           <a
             href="https://www.vaticannews.va/pt.html"
@@ -180,14 +182,14 @@ export default function VaticanNewsSection() {
             rel="noopener noreferrer"
             className="group"
           >
-            <div className="h-20 w-auto max-w-full overflow-hidden">
+            <div className="h-24 w-auto max-w-full overflow-hidden">
               <img
                 src="/vaticanNewsBanner.png"
                 alt="Vatican News"
                 className="h-full w-auto object-contain drop-shadow-xl transition-transform duration-300 group-hover:scale-105 group-hover:shadow-2xl"
               />
             </div>
-            <div className="flex items-center justify-center gap-2 mt-2 text-sm text-gray-100 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="flex items-center justify-center gap-2 mt-2 text-sm text-white opacity-0 group-hover:opacity-100 transition-opacity duration-300">
               <span>Clique para acessar o site oficial</span>
               <ExternalLink size={14} />
             </div>
@@ -195,15 +197,15 @@ export default function VaticanNewsSection() {
         </div>
 
         {/* GRID de notícias */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {news.map((item) => (
             <div
               key={item.id}
-              className="bg-white/80 backdrop-blur-md rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border border-red-100 group"
+              className="bg-white/90 backdrop-blur-md rounded-xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 border border-white/50 group transform hover:-translate-y-1"
             >
-              <div className="bg-red-100/80 p-4 text-gray-800">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-red-700 bg-white px-3 py-1 rounded-full border border-red-200">
+              <div className="bg-gradient-to-r from-red-50 to-pink-50 p-5 text-gray-800 border-b border-red-100">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-semibold text-red-700 bg-white px-3 py-1.5 rounded-full border border-red-200 shadow-sm">
                     {item.category}
                   </span>
                   <Calendar size={16} className="text-red-500" />
@@ -213,15 +215,15 @@ export default function VaticanNewsSection() {
                 </h3>
               </div>
 
-              <div className="p-4">
-                <p className="text-gray-700 text-sm mb-4 line-clamp-3 leading-relaxed">
+              <div className="p-5">
+                <p className="text-gray-700 text-sm mb-5 line-clamp-3 leading-relaxed">
                   {item.description}
                 </p>
 
-                <div className="space-y-2 text-xs text-gray-600 mb-4">
+                <div className="space-y-2.5 text-xs text-gray-600 mb-5">
                   <div className="flex items-center gap-2">
                     <User size={12} className="text-red-500" />
-                    <span>{item.author}</span>
+                    <span className="font-medium">{item.author}</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <Calendar size={12} className="text-red-500" />
@@ -233,7 +235,7 @@ export default function VaticanNewsSection() {
                   href={item.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm group/btn shadow-md hover:shadow-lg"
+                  className="w-full bg-gradient-to-r from-red-600 to-pink-600 hover:from-red-700 hover:to-pink-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 flex items-center justify-center gap-2 text-sm group/btn shadow-md hover:shadow-lg transform hover:scale-[1.02]"
                 >
                   <span>Ler Notícia Completa</span>
                   <ExternalLink
@@ -247,14 +249,20 @@ export default function VaticanNewsSection() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4 text-center mt-6">
-            <p className="text-red-600 text-sm">{error}</p>
+          <div className="bg-white/90 backdrop-blur-sm border border-red-200 rounded-xl p-4 text-center mt-8 shadow-lg">
+            <p className="text-red-600 text-sm font-medium">{error}</p>
             <p className="text-red-500 text-xs mt-1">
               Mostrando notícias temporárias enquanto o serviço original não responde.
             </p>
           </div>
         )}
 
+        {/* Rodapé da seção */}
+        <div className="text-center mt-12 pt-6 border-t border-white/20">
+          <p className="text-white text-sm opacity-80">
+            Fonte oficial: Vatican News - Santa Sé
+          </p>
+        </div>
       </div>
     </section>
   );
