@@ -1,5 +1,4 @@
 import { useState } from "react";
-import Navigation from "../components/layout/Navigation";
 import Footer from "../components/layout/Footer";
 import { Mail, Phone, MapPin, Send, Clock, FileText, NavigationIcon, MessageCircle } from "lucide-react";
 
@@ -83,12 +82,12 @@ export default function Contato() {
   const googleMapsDirectionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${enderecoMaps}`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-blue-50">
-      <Navigation />
-
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-blue-50 pt-16">
+      {/* pt-16 para compensar o Navigation fixo que já está no App.tsx */}
+      
       <main className="flex-grow max-w-6xl mx-auto px-4 py-8 sm:py-12 w-full">
         {/* Header com Imagem do Santuário */}
-        <div className="relative rounded-2xl overflow-hidden shadow-xl mb-10">
+        <div className="relative rounded-2xl overflow-hidden shadow-xl mb-10 mt-4">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 to-purple-900/70 z-10"></div>
           <img 
             src="/images/carrosselFotos/fachada1.png" 
@@ -119,7 +118,6 @@ export default function Contato() {
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-3 drop-shadow-lg">
               Entre em Contato Conosco
             </h1>
-          
           </div>
         </div>
 

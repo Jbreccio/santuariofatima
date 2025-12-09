@@ -118,15 +118,27 @@ export default function Pastorais() {
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-gray-50 to-blue-50">
       <Navigation />
 
-      <main className="flex-grow max-w-7xl mx-auto px-4 py-12 w-full">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Nossas Pastorais</h1>
-          <p className="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto">
-            Conheça as pastorais que trabalham para fortalecer nossa comunidade e levar o amor de Cristo a todos
-          </p>
-        </div>
+      {/* ✅ BANNER NO TOPO - SEM ALTERAR O LAYOUT */}
+      <div className="relative w-full h-[520px]">
+  <img 
+    src="/bannerPastorais.png"
+    alt="Banner Pastorais"
+    className="w-full h-full object-cover"
+  />
 
+  {/* TEXTO SOBRE A IMAGEM */}
+  <div className="absolute inset-0 flex flex-col items-center justify-center text-center bg-black/40 px-4">
+    <h1 className="text-4xl md:text-7xl font-bold text-white mb-4">
+      Nossas Pastorais
+    </h1>
+    <p className="text-lg md:text-xl text-white max-w-3xl">
+      Conheça as pastorais que trabalham para fortalecer nossa comunidade e levar o amor de Cristo a todos
+    </p>
+  </div>
+</div>
+
+      <main className="flex-grow max-w-7xl mx-auto px-4 py-12 w-full">
+     
         {/* Grid de Pastorais */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
           {pastorais.map((pastoral) => {
@@ -166,10 +178,7 @@ export default function Pastorais() {
                   </div>
                 </div>
 
-                {/* Footer do card - REMOVIDO O BOTÃO */}
-                <div className="px-6 pb-6">
-                  {/* Botão removido - espaço vazio ou pode remover esta div se quiser */}
-                </div>
+                <div className="px-6 pb-6"></div>
               </div>
             );
           })}

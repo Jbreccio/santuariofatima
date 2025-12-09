@@ -1,12 +1,20 @@
 // src/components/layout/WhatsAppButton.tsx
 import React from 'react';
+import { useLocation } from 'react-router-dom'; // ✅ Importação necessária
 
 const WhatsAppButton: React.FC = () => {
-  const phoneNumber = '551155210312'; // Formato internacional SEM o símbolo "+"
+  const location = useLocation(); // ✅ Obter a rota atual
+
+  // ✅ NÃO RENDERIZAR NADA se estiver na página secreta
+  if (location.pathname === '/loginsecret') {
+    return null;
+  }
+
+  const phoneNumber = '551155210312';
   const message = 'Olá! Gostaria de mais informações sobre o Santuário Nossa Senhora de Fátima.';
 
-  // Remove qualquer caractere que não seja número
   const cleanNumber = phoneNumber.replace(/\D/g, '');
+  // ✅ Corrigido: removido espaço extra na URL
   const whatsappUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
 
   return (

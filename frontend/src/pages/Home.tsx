@@ -70,9 +70,11 @@ export default function Home() {
       {/* VATICAN NEWS */}
       <VaticanNewsSection />
 
-      {/* LITURGIA */}
-      <LiturgiaDiaria />
-
+      {/* LITURGIA COM ID PARA ÂNCORA */}
+      <section id="liturgia" className="mb-8 sm:mb-10">
+        <LiturgiaDiaria />
+      </section>
+      
       {/* REDES SOCIAIS */}
       <SocialMediaPanel />
       

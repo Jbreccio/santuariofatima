@@ -86,7 +86,7 @@ export default function MissasPreview() {
         <div className="relative h-[500px] sm:h-[500px] md:h-[500px] lg:h-[750px] overflow-hidden">
           {/* Imagem como faixa */}
           <img 
-            src="./public/missasbunner.png" 
+            src="/missasbunner.png" 
             alt="Entrada do Santuário - Calendário Litúrgico"
             className="absolute inset-0 w-full h-full object-cover object-[center_30%]"
           />
@@ -318,14 +318,14 @@ export default function MissasPreview() {
             <div className="bg-gradient-to-r from-rose-500 to-orange-500 p-4 sm:p-6 text-white">
               <div className="flex items-center gap-3">
                 <Heart size={24} sm:size={28} />
-                <h2 className="text-xl sm:text-2xl font-bold">Sacramento da Confissão</h2>
+                <h2 className="text-xl sm:text-2xl font-bold">Confissão</h2>
               </div>
             </div>
             
             <div className="p-4 sm:p-6">
               <div className="mb-4">
                 <p className="text-gray-700 text-sm sm:text-base leading-relaxed">
-                  Reconcilie-se com Deus através do Sacramento da Penitência, no qual recebemos o perdão, a paz e a graça para recomeçar. A Confissão é um encontro de misericórdia em que Cristo nos acolhe, nos cura e nos fortalece no caminho da santidade.
+                  Reconcilie-se com DEUS através do Sacramento da Penitência, no qual recebemos o perdão, a paz e a graça para recomeçar. A Confissão é um encontro de misericórdia em que Cristo nos acolhe, nos cura e nos fortalece no caminho da santidade.
                 </p>
               </div>
               
@@ -366,7 +366,7 @@ export default function MissasPreview() {
                     <h3 className="font-bold text-gray-900 text-sm sm:text-base">Outros Horários</h3>
                   </div>
                   <p className="text-gray-700 text-xs sm:text-sm">
-                    Entre em contato conosco para horários especiais.
+                    Clique abaixo e entre em contato conosco para horários especiais.
                   </p>
                 </div>
               </div>
@@ -392,7 +392,7 @@ export default function MissasPreview() {
           </div>
 
           <div className="bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl p-4 sm:p-6 shadow-sm text-white">
-            <h3 className="font-bold text-xl sm:text-2xl mb-3">Venha nos visitar!</h3>
+            <h3 className="font-bold text-xl sm:text-3xl mb-3">Venha nos visitar!</h3>
             <p className="mb-4 sm:mb-6 leading-relaxed opacity-95 text-sm sm:text-base">
               Todos são bem-vindos ao Santuário. Traga sua família e amigos para celebrar conosco.
             </p>
@@ -405,10 +405,10 @@ export default function MissasPreview() {
               </Link>
               
               <Link 
-                to="/eventos"
+                to="/contato"
                 className="bg-blue-800 text-white px-4 py-2.5 rounded-lg font-semibold hover:bg-blue-900 transition-colors text-center text-sm sm:text-base shadow-sm"
               >
-                Próximos Eventos
+                Entre em Contato
               </Link>
             </div>
           </div>
@@ -416,14 +416,26 @@ export default function MissasPreview() {
 
         {/* Link para Liturgia */}
         <div className="mt-8 sm:mt-10 text-center">
-          <Link 
-            to="/liturgia"
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold text-sm sm:text-base"
-          >
-            <BookOpen size={16} sm:size={18} />
-            <span>Ver Liturgia do Dia</span>
-          </Link>
-        </div>
+  <Link 
+    to="/#liturgia"  // ← AGORA COM ÂNCORA!
+    className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 font-semibold text-sm sm:text-base"
+    onClick={(e) => {
+      // Se já estiver na página inicial, rola suavemente
+      if (window.location.pathname === '/') {
+        e.preventDefault();
+        const element = document.getElementById('liturgia');
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+          // Atualiza a URL com a âncora
+          window.history.pushState({}, '', '/#liturgia');
+        }
+      }
+    }}
+  >
+    <BookOpen size={16} sm:size={18} />
+    <span>Ver Liturgia do Dia</span>
+  </Link>
+</div>
       </main>
 
       <Footer />

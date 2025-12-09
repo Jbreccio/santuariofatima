@@ -1,41 +1,8 @@
 import { Mail, Phone, MapPin, Home, Calendar, DollarSign, Cross, Book, Users, Church, Info, Contact } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const navigate = useNavigate();
-
-  // Função para rolar para o topo quando clicar em um link
-  const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    const href = e.currentTarget.getAttribute('href');
-    
-    if (href) {
-      // Rola para o topo da página
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      
-      // Navega para a rota após um pequeno delay para garantir o scroll
-      setTimeout(() => {
-        navigate(href);
-      }, 100);
-    }
-  };
-
-  // Adiciona evento de clique aos links de navegação
-  useEffect(() => {
-    const links = document.querySelectorAll('footer a[href^="/"]');
-    
-    links.forEach(link => {
-      link.addEventListener('click', handleLinkClick as any);
-    });
-    
-    return () => {
-      links.forEach(link => {
-        link.removeEventListener('click', handleLinkClick as any);
-      });
-    };
-  }, []);
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -43,7 +10,7 @@ export default function Footer() {
         {/* Seção Principal - 4 colunas responsivas */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8 mb-6">
           
-          {/* Coluna 1: Logo e Descrição - CORRIGIDA */}
+          {/* Coluna 1: Logo e Descrição */}
           <div className="lg:col-span-1">
             <div className="flex flex-col items-center md:items-start">
               {/* Logo AUMENTADO */}
@@ -52,13 +19,13 @@ export default function Footer() {
                 alt="Santuário Nossa Senhora de Fátima" 
                 className="h-32 w-auto rounded-lg shadow-lg mb-4"
               />
-              {/* Título em duas linhas - COMO SOLICITADO */}
+              {/* Título em duas linhas */}
               <div className="text-center md:text-left mb-3">
                 <h2 className="text-xl font-bold leading-tight text-white mb-1">
                   Santuário Nossa Senhora
                 </h2>
                 <h3 className="text-xl font-bold text-white">
-                         de Fátima
+                  de Fátima
                 </h3>
               </div>
             </div>
@@ -71,67 +38,74 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2">
               <li>
-                <a href="/" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
+                <Link to="/" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
                   <Home size={15} className="text-blue-400 group-hover:scale-110 transition-transform" />
                   <span>Início</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/historia" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
+                <Link to="/historia" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
                   <Book size={15} className="text-blue-400 group-hover:scale-110 transition-transform" />
                   <span>História</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/pastorais" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
+                <Link to="/pastorais" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
                   <Users size={15} className="text-blue-400 group-hover:scale-110 transition-transform" />
                   <span>Pastorais</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/santododia" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
+                <Link to="/santododia" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
                   <Church size={15} className="text-blue-400 group-hover:scale-110 transition-transform" />
                   <span>Santo do Dia</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/doacoes" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
+                <Link to="/doacoes" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
                   <DollarSign size={15} className="text-blue-400 group-hover:scale-110 transition-transform" />
                   <span>Doações</span>
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
 
-          {/* Coluna 3: Eventos e Informações */}
+          {/* Coluna 3: Informações */}
           <div className="lg:col-span-1">
             <h3 className="text-base font-bold mb-3 border-b border-gray-700 pb-2">
               Informações
             </h3>
             <ul className="space-y-2">
               <li>
-                <a href="/missas" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
+                <Link to="/missas" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
                   <Cross size={15} className="text-blue-400" />
                   <span>Missas</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/calendarioliturgico" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
+                <Link to="/calendarioliturgico" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
                   <Calendar size={15} className="text-blue-400" />
                   <span>Calendário Litúrgico</span>
-                </a>
+                </Link>
+              </li>
+              {/* MOMENTOS LITÚRGICOS ADICIONADO AQUI */}
+              <li>
+                <Link to="/momentosliturgicos" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
+                  <Church size={15} className="text-blue-400" />
+                  <span>Momentos Litúrgicos</span>
+                </Link>
               </li>
               <li>
-                <a href="/contato" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
+                <Link to="/contato" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
                   <Contact size={15} className="text-blue-400" />
                   <span>Contato</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="/sobrenos" onClick={handleLinkClick} className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
+                <Link to="/sobrenos" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
                   <Info size={15} className="text-blue-400" />
                   <span>Sobre Nós</span>
-                </a>
+                </Link>
               </li>
             </ul>
           </div>
@@ -183,20 +157,17 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Texto da descrição - AGORA POSICIONADO ENTRE NAVEGAÇÃO E INFORMAÇÕES */}
+        {/* Texto da descrição */}
         <div className="border-t border-gray-700 pt-4 mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-center">
-            {/* Espaço vazio para manter o grid */}
             <div className="hidden lg:block"></div>
             
-            {/* Texto da descrição no centro */}
             <div className="col-span-1">
               <p className="text-gray-300 text-sm text-center italic leading-relaxed">
                 "Um lar para o coração, uma guia para a alma. Celebrando a fé e a devoção desde 1917."
               </p>
             </div>
             
-            {/* Espaço vazio para manter o grid */}
             <div className="hidden lg:block"></div>
           </div>
         </div>
@@ -267,17 +238,17 @@ export default function Footer() {
             </p>
             
             <div className="flex gap-3 text-sm">
-              <a href="/politica-privacidade" onClick={handleLinkClick} className="text-gray-400 hover:text-white transition-colors">
+              <Link to="/politica-privacidade" className="text-gray-400 hover:text-white transition-colors">
                 Política de Privacidade
-              </a>
+              </Link>
               <span className="text-gray-600">|</span>
-              <a href="/termos-uso" onClick={handleLinkClick} className="text-gray-400 hover:text-white transition-colors">
+              <Link to="/termos-uso" className="text-gray-400 hover:text-white transition-colors">
                 Termos de Uso
-              </a>
+              </Link>
               <span className="text-gray-600">|</span>
-              <a href="/faq" onClick={handleLinkClick} className="text-gray-400 hover:text-white transition-colors">
+              <Link to="/faq" className="text-gray-400 hover:text-white transition-colors">
                 FAQ
-              </a>
+              </Link>
             </div>
           </div>
         </div>

@@ -249,11 +249,123 @@ const CarrosselJubileo = ({ slides }: { slides: CarrosselItem[] }) => {
   );
 };
 
+const CarrosselDomingoRamos = ({ slides }: { slides: CarrosselItem[] }) => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  useEffect(() => {
+    if (slides.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlide(prev => (prev + 1) % slides.length);
+      }, 5000);
+      return () => clearInterval(interval);
+    }
+  }, [slides.length]);
+
+  const nextSlide = () => setCurrentSlide(prev => (prev + 1) % slides.length);
+  const prevSlide = () => setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
+
+  if (slides.length === 0) {
+    return (
+      <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
+        <div className="relative h-[300px] overflow-hidden flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-gray-500">Nenhuma imagem disponível</p>
+            <p className="text-sm text-gray-400 mt-1">Adicione imagens pelo Painel Admin</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
+      <div className="relative h-[300px] overflow-hidden">
+        {slides.map((slide, index) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
+              index === currentSlide ? 'opacity-100' : 'opacity-0'
+            }`}
+          >
+            <div className="relative w-full h-full">
+              {/* Imagem de fundo com blur */}
+              <div 
+                className="absolute inset-0 bg-cover bg-center blur-sm scale-105"
+                style={{ backgroundImage: `url(${slide.imagem})` }}
+              />
+              {/* Imagem principal */}
+              <img
+                src={slide.imagem}
+                alt={slide.titulo || 'Imagem Domingo de Ramos'}
+                className="absolute inset-0 w-full h-full object-contain p-4"
+                onError={(e) => {
+                  e.currentTarget.style.display = 'none';
+                  const parent = e.currentTarget.parentElement;
+                  if (parent) {
+                    parent.innerHTML = `
+                      <div class="w-full h-full flex items-center justify-center bg-gray-100">
+                        <div class="text-center">
+                          <p class="text-gray-500">Imagem não encontrada</p>
+                          <p class="text-sm text-gray-400">${slide.imagem}</p>
+                        </div>
+                      </div>
+                    `;
+                  }
+                }}
+              />
+              {/* Overlay para título */}
+              {slide.titulo && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <h3 className="text-white font-semibold text-center">{slide.titulo}</h3>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* Controles - só mostra se tiver mais de 1 slide */}
+        {slides.length > 1 && (
+          <>
+            <button
+              onClick={prevSlide}
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            <button
+              onClick={nextSlide}
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </>
+        )}
+
+        {/* Indicadores - só mostra se tiver mais de 1 slide */}
+        {slides.length > 1 && (
+          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+            {slides.map((_, idx) => (
+              <button
+                key={idx}
+                onClick={() => setCurrentSlide(idx)}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  idx === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 export default function Eventos() {
   const [recados, setRecados] = useState<Recado[]>([]);
   const [eventos, setEventos] = useState<Recado[]>([]);
   const [carrosselCinzas, setCarrosselCinzas] = useState<CarrosselItem[]>([]);
   const [carrosselJubileu, setCarrosselJubileu] = useState<CarrosselItem[]>([]);
+  const [carrosselDomingoRamos, setCarrosselDomingoRamos] = useState<CarrosselItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Carregar dados do localStorage
@@ -276,6 +388,12 @@ export default function Eventos() {
           const jubileuAtivas = jubileu.filter((item: any) => item.ativo === true);
           jubileuAtivas.sort((a: any, b: any) => a.ordem - b.ordem);
           setCarrosselJubileu(jubileuAtivas);
+          
+          // Carregar carrossel Domingo de Ramos
+          const domingoRamos = parsed.carrosselDomingoRamos || [];
+          const domingoRamosAtivas = domingoRamos.filter((item: any) => item.ativo === true);
+          domingoRamosAtivas.sort((a: any, b: any) => a.ordem - b.ordem);
+          setCarrosselDomingoRamos(domingoRamosAtivas);
           
           // Carregar eventos e recados do NOVO sistema
           if (parsed.eventos) {
@@ -324,6 +442,14 @@ export default function Eventos() {
               { id: 'jubileo6', imagem: '/Jubileo6.png', titulo: 'Renovação Espiritual', ordem: 5, ativo: true, local: 'eventos-jubileu' }
             ]);
           }
+
+          // Domingo de Ramos - imagens padrão
+          if (carrosselDomingoRamos.length === 0) {
+            setCarrosselDomingoRamos([
+              { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
+              { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' }
+            ]);
+          }
         } else {
           // Se não houver dados no localStorage, usa imagens padrão
           setCarrosselCinzas([
@@ -342,6 +468,12 @@ export default function Eventos() {
             { id: 'jubileo4', imagem: '/Jubileo4.png', titulo: 'Encontro de Fé', ordem: 3, ativo: true, local: 'eventos-jubileu' },
             { id: 'jubileo5', imagem: '/Jubileo5.png', titulo: 'Graças e Bênçãos', ordem: 4, ativo: true, local: 'eventos-jubileu' },
             { id: 'jubileo6', imagem: '/Jubileo6.png', titulo: 'Renovação Espiritual', ordem: 5, ativo: true, local: 'eventos-jubileu' }
+          ]);
+
+          // Domingo de Ramos - imagens padrão
+          setCarrosselDomingoRamos([
+            { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
+            { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' }
           ]);
         }
       } catch (error) {
@@ -363,6 +495,12 @@ export default function Eventos() {
           { id: 'jubileo4', imagem: '/Jubileo4.png', titulo: 'Encontro de Fé', ordem: 3, ativo: true, local: 'eventos-jubileu' },
           { id: 'jubileo5', imagem: '/Jubileo5.png', titulo: 'Graças e Bênçãos', ordem: 4, ativo: true, local: 'eventos-jubileu' },
           { id: 'jubileo6', imagem: '/Jubileo6.png', titulo: 'Renovação Espiritual', ordem: 5, ativo: true, local: 'eventos-jubileu' }
+        ]);
+
+        // Domingo de Ramos
+        setCarrosselDomingoRamos([
+          { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
+          { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' }
         ]);
       } finally {
         setLoading(false);
@@ -398,12 +536,20 @@ export default function Eventos() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-blue-50">
       <Navigation />
+        {/* BANNER MOMENTOS LITÚRGICOS NO TOPO */}
+        <div className="w-full mt-20">
+        <img 
+          src="/BannerML.png"
+          alt="Momentos Litúrgicos"
+          className="w-full max-h-[520 ppx] object-cover"
+          />
+      </div>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
         {/* === SEÇÃO CINZAS 2025 COM CARROSSEL === */}
         <section className="mb-12">
           {/* CONTAINER ROXO COM MARGEM SUPERIOR ADICIONADA */}
-          <div className="mb-6 mt-20">
+          <div className="mb-6 mt-30">
             <div className="bg-gradient-to-r from-purple-900 to-purple-700 rounded-xl p-6 shadow-lg">
               <h1 className="text-3xl font-bold text-white mb-1">CINZAS 2025</h1>
               <p className="text-lg text-purple-100">
@@ -431,7 +577,23 @@ export default function Eventos() {
           <CarrosselJubileo slides={carrosselJubileu} />
         </section>
 
-        {/* ✅ EVENTOS - Gerenciados pelo Painel Admin */}
+        {/* === NOVA SEÇÃO: DOMINGO DE RAMOS 2025 COM CARROSSEL === */}
+        <section className="mb-12">
+          <div className="mb-6">
+            {/* FAIXA VERMELHA PARA DOMINGO DE RAMOS - CORRETA */}
+            <div className="bg-gradient-to-r from-red-700 to-red-900 rounded-xl p-6 shadow-lg">
+              <h1 className="text-3xl font-bold text-white mb-1">DOMINGO DE RAMOS 2025</h1>
+              <p className="text-lg text-red-100">
+                Celebração da entrada triunfal de Jesus em Jerusalém. Início da Semana Santa.
+              </p>
+            </div>
+          </div>
+
+          {/* Carrossel de Domingo de Ramos - Carregado do Painel Admin */}
+          <CarrosselDomingoRamos slides={carrosselDomingoRamos} />
+        </section>
+
+        {/* Momentos Litúrgicos - Gerenciados pelo Painel Admin */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4 text-gray-900">Próximos Eventos</h2>
           <p className="text-lg text-gray-600 mb-6">

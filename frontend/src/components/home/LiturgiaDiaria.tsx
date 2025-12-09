@@ -214,6 +214,6 @@ const LiturgiaDiaria = () => {
       </div>
     </section>
   );
-};
+}
 
 export default LiturgiaDiaria;

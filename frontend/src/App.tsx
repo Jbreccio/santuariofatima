@@ -7,7 +7,6 @@ import Navigation from "./components/layout/Navigation";
 import WhatsAppButton from './components/layout/WhatsAppButton';
 import AppRoutes from "./routes/AppRoutes";
 
-// CORREÇÃO: caminhos corretos
 import { AuthProvider } from "./contexts/AuthContext";
 import { RecadosProvider } from "./contexts/RecadosContext";
 import { ThemeProvider } from "./contexts/ThemeContext";
@@ -25,8 +24,7 @@ export default function App() {
                 <Navigation />
                 <Popup />    
                 <AppRoutes />
-                                
-                {/* Sempre visível em todas as páginas */}
+                 
                 <WhatsAppButton />
               </BrowserRouter>
             </TooltipProvider>
@@ -35,4 +33,4 @@ export default function App() {
       </AuthProvider>
     </ErrorBoundary>
   );
-} 
+}

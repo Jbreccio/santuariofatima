@@ -1,5 +1,6 @@
-// frontend/src/components/layout/Popup.tsx
+// frontend/src/components/popup/popup.tsx
 import { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 interface PopupData {
   id: string;
@@ -13,6 +14,13 @@ interface PopupData {
 }
 
 const Popup = () => {
+  const location = useLocation();
+
+  // ✅ NÃO RENDERIZAR NADA NA PÁGINA SECRETA
+  if (location.pathname === '/loginsecret') {
+    return null;
+  }
+
   const [currentPopupIndex, setCurrentPopupIndex] = useState(0);
   const [show, setShow] = useState(false);
   const [popupsAtivos, setPopupsAtivos] = useState<PopupData[]>([]);
