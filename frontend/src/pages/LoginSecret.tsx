@@ -299,14 +299,14 @@ export default function LoginSecret() {
           </div>
           
           <div className="text-white">
-            <h2 className="text-4xl font-bold mb-6 tracking-tight">Santuário de Fátima</h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+            <h2 className="text-5xl font-bold mb-6 tracking-tight">Santuário de Fátima</h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p- border border-white/20">
               <p className="text-white/90 text-xl italic leading-relaxed mb-4">
                 "Rezai o terço todos os dias para alcançar a paz para o mundo e o fim da guerra"
               </p>
               <p className="text-white/70">— Nossa Senhora de Fátima, 13 de maio de 1917</p>
             </div>
-            <p className="text-white/60 mt-8 text-lg">Paróquia Santuário de Fátima</p>
+            <p className="text-white/60 mt-8 text-lg">Santuário Nossa Senhora de Fátima</p>
           </div>
           
           <div className="mt-12 pt-8 border-t border-white/20">

@@ -447,9 +447,15 @@ export default function Eventos() {
           if (carrosselDomingoRamos.length === 0) {
             setCarrosselDomingoRamos([
               { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
-              { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' }
-            ]);
-          }
+              { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' },
+              { id: 'ramos01', imagem: '/ramos01.png', titulo: 'Celebração de Ramos', ordem: 2, ativo: true, local: 'eventos-ramos' },
+              { id: 'ramos02', imagem: '/ramos02.png', titulo: 'Celebração de Ramos', ordem: 3, ativo: true, local: 'eventos-ramos' },
+              { id: 'ramos03', imagem: '/ramos03.png', titulo: 'Celebração de Ramos', ordem: 5, ativo: true, local: 'eventos-ramos' },
+              { id: 'ramos04', imagem: '/ramos04.png', titulo: 'Celebração de Ramos', ordem: 6, ativo: true, local: 'eventos-ramos' },
+              { id: 'ramos05', imagem: '/ramos05.png', titulo: 'Celebração de Ramos', ordem: 7, ativo: true, local: 'eventos-ramos' }
+        ]);
+
+                     }
         } else {
           // Se não houver dados no localStorage, usa imagens padrão
           setCarrosselCinzas([
@@ -473,8 +479,14 @@ export default function Eventos() {
           // Domingo de Ramos - imagens padrão
           setCarrosselDomingoRamos([
             { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
-            { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' }
-          ]);
+            { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' },
+            { id: 'ramos01', imagem: '/ramos01.png', titulo: 'Celebração de Ramos', ordem: 2, ativo: true, local: 'eventos-ramos' },
+            { id: 'ramos02', imagem: '/ramos02.png', titulo: 'Celebração de Ramos', ordem: 3, ativo: true, local: 'eventos-ramos' },
+            { id: 'ramos03', imagem: '/ramos03.png', titulo: 'Celebração de Ramos', ordem: 5, ativo: true, local: 'eventos-ramos' },
+            { id: 'ramos04', imagem: '/ramos04.png', titulo: 'Celebração de Ramos', ordem: 6, ativo: true, local: 'eventos-ramos' },
+            { id: 'ramos05', imagem: '/ramos05.png', titulo: 'Celebração de Ramos', ordem: 7, ativo: true, local: 'eventos-ramos' }
+        ]);
+        
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
@@ -500,8 +512,15 @@ export default function Eventos() {
         // Domingo de Ramos
         setCarrosselDomingoRamos([
           { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
-          { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' }
+          { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' },
+          { id: 'ramos01', imagem: '/ramos01.png', titulo: 'Celebração de Ramos', ordem: 2, ativo: true, local: 'eventos-ramos' },
+          { id: 'ramos02', imagem: '/ramos02.png', titulo: 'Celebração de Ramos', ordem: 3, ativo: true, local: 'eventos-ramos' },
+          { id: 'ramos03', imagem: '/ramos03.png', titulo: 'Celebração de Ramos', ordem: 4, ativo: true, local: 'eventos-ramos' },
+          { id: 'ramos04', imagem: '/ramos04.png', titulo: 'Celebração de Ramos', ordem: 5, ativo: true, local: 'eventos-ramos' },
+          { id: 'ramos05', imagem: '/ramos05.png', titulo: 'Celebração de Ramos', ordem: 6, ativo: true, local: 'eventos-ramos' }
         ]);
+    
+
       } finally {
         setLoading(false);
       }

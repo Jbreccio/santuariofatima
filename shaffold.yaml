@@ -1,0 +1,48 @@
+apiVersion: skaffold/v4beta13
+kind: Config
+metadata:
+  name: santuario-platform
+build:
+  artifacts:
+    - image: santuario-backend
+      context: ./backend
+      docker:
+        dockerfile: Dockerfile
+    - image: santuario-frontend
+      context: ./frontend
+      docker:
+        dockerfile: Dockerfile
+  tagPolicy:
+    gitCommit: {}
+deploy:
+  kubectl:
+    manifests:
+      - k8s/namespace.yaml
+      - k8s/configmaps.yaml
+      - k8s/secrets.yaml
+      - k8s/postgres.yaml
+      - k8s/redis.yaml
+      - k8s/backend.yaml
+      - k8s/frontend.yaml
+      - k8s/nginx-ingress.yaml
+      - k8s/hpa.yaml
+      - k8s/pdb.yaml
+portForward:
+  - resourceType: deployment
+    resourceName: frontend
+    port: 80
+    localPort: 8080
+profiles:
+  - name: dev
+    deploy:
+      kubectl:
+        manifests:
+          - k8s/dev-overrides.yaml
+  - name: prod
+    deploy:
+      kubectl:
+        manifests:
+          - k8s/prod-overrides.yaml
+    build:
+      local:
+        push: true
