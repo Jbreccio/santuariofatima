@@ -1,4 +1,3 @@
-// LoginSecret.tsx ATUALIZADO
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { LogIn, AlertCircle, Shield, Mail, Cross } from 'lucide-react';
@@ -62,9 +61,20 @@ export default function LoginSecret() {
         {step === 'idle' && (
           <div className="w-full max-w-md">
             <div className="bg-gradient-to-b from-[#051f2c] to-[#2e8cb8] rounded-xl p-10 text-center shadow-2xl">
+              {/* LOGO NO CENTRO DO BOTÃO */}
               <div className="flex justify-center mb-6">
-                <Cross className="w-12 h-12 text-white" />
+                <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/30 shadow-lg">
+                  <img 
+                    src="/logo.png" 
+                    alt="Santuário de Fátima"
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.currentTarget.src = 'https://placehold.co/80x80/1e3a8a/ffffff?text=SF';
+                    }}
+                  />
+                </div>
               </div>
+              
               <h1 className="text-2xl font-bold text-white mb-2">Santuário de Fátima</h1>
               <p className="text-white/80 text-sm mb-8">Acesso Administrativo</p>
               
@@ -86,37 +96,51 @@ export default function LoginSecret() {
           </div>
         )}
 
-        {/* ETAPAS DE LOGIN (Modal) */}
+        {/* ETAPAS DE LOGIN (Modal) - COM MELHORIAS */}
         {(step === 'credentials' || step === '2fa' || step === 'pin') && (
-          <div className="bg-white border border-gray-200 rounded-2xl shadow-2xl w-full max-w-md p-8">
-            {/* Botão para voltar à tela inicial */}
-            <button
-              onClick={() => setStep('idle')}
-              className="text-gray-500 hover:text-gray-700 mb-6 flex items-center gap-2"
-            >
-              ← Voltar
-            </button>
+          <div className="bg-gradient-to-b from-[#051f2c] to-[#2e8cb8] rounded-2xl shadow-2xl w-full max-w-md p-8">
+            {/* CABEÇALHO DO MODAL COM LOGO */}
+            <div className="flex items-center justify-between mb-8">
+              <button
+                onClick={() => setStep('idle')}
+                className="text-white hover:text-gray-300 flex items-center gap-2"
+              >
+                ← Voltar
+              </button>
+              
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white/30">
+                  <img 
+                    src="/logo.png" 
+                    alt="Logo"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <span className="text-white font-bold text-lg">Painel Admin</span>
+              </div>
+            </div>
 
-            <div className="flex justify-center mb-6">
+            {/* BARRA DE PROGRESSO */}
+            <div className="flex justify-center mb-8">
               {[1, 2, 3].map((i) => (
                 <div key={i} className="flex items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                    className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold ${
                       (step === 'credentials' && i === 1) ||
                       (step === '2fa' && i <= 2) ||
                       (step === 'pin' && i <= 3)
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-600'
+                        ? 'bg-white text-blue-700'
+                        : 'bg-white/20 text-white/60'
                     }`}
                   >
                     {i}
                   </div>
                   {i < 3 && (
                     <div
-                      className={`w-8 h-0.5 mx-1 ${
+                      className={`w-10 h-1 mx-2 ${
                         (step === '2fa' && i >= 1) || step === 'pin'
-                          ? 'bg-blue-600'
-                          : 'bg-gray-200'
+                          ? 'bg-white'
+                          : 'bg-white/20'
                       }`}
                     />
                   )}
@@ -125,7 +149,7 @@ export default function LoginSecret() {
             </div>
 
             {error && (
-              <div className="bg-red-50 text-red-700 p-4 rounded-lg text-sm mb-6 flex items-start">
+              <div className="bg-red-500/20 border border-red-400 text-white p-4 rounded-lg text-sm mb-6 flex items-start backdrop-blur-sm">
                 <AlertCircle size={18} className="mt-0.5 mr-3 flex-shrink-0" />
                 <span>{error}</span>
               </div>
@@ -134,8 +158,13 @@ export default function LoginSecret() {
             <form onSubmit={handleLoginFlow} className="space-y-6">
               {step === 'credentials' && (
                 <>
+                  <div className="text-center mb-6">
+                    <h2 className="text-2xl font-bold text-white mb-2">Credenciais de Acesso</h2>
+                    <p className="text-white/80">Digite seu usuário e senha</p>
+                  </div>
+                  
                   <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                    <label className="block text-white text-sm font-medium mb-2">
                       Usuário
                     </label>
                     <input
@@ -144,12 +173,12 @@ export default function LoginSecret() {
                       value={credenciais.usuario}
                       onChange={(e) => setCredenciais({ ...credenciais, usuario: e.target.value })}
                       placeholder="Digite seu usuário"
-                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 bg-white/10 border border-white/20 text-white rounded-lg focus:ring-2 focus:ring-white focus:border-white placeholder:text-white/50"
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-gray-700 text-sm font-medium mb-2">
+                    <label className="block text-white text-sm font-medium mb-2">
                       Senha
                     </label>
                     <input
@@ -157,25 +186,27 @@ export default function LoginSecret() {
                       value={credenciais.senha}
                       onChange={(e) => setCredenciais({ ...credenciais, senha: e.target.value })}
                       placeholder="Digite sua senha"
-                      className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      className="w-full p-4 bg-white/10 border border-white/20 text-white rounded-lg focus:ring-2 focus:ring-white focus:border-white placeholder:text-white/50"
                     />
                   </div>
                   
                   <button
                     type="submit"
-                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-lg font-semibold text-lg transition-colors"
+                    className="w-full bg-white hover:bg-gray-100 text-blue-700 py-4 rounded-lg font-bold text-lg transition-colors shadow-lg hover:shadow-xl"
                   >
-                    Próxima Etapa
+                    Próxima Etapa →
                   </button>
                 </>
               )}
 
               {step === '2fa' && (
                 <>
-                  <div className="text-center">
-                    <Shield className="w-14 h-14 text-blue-600 mx-auto mb-4" />
-                    <h3 className="font-bold text-gray-800 text-xl">Google Authenticator</h3>
-                    <p className="text-gray-600 mt-2">Digite o código de 6 dígitos do aplicativo</p>
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
+                      <Shield className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-white text-xl">Google Authenticator</h3>
+                    <p className="text-white/80 mt-2">Digite o código de 6 dígitos do aplicativo</p>
                   </div>
                   
                   <input
@@ -185,23 +216,23 @@ export default function LoginSecret() {
                     value={codigo2FA}
                     onChange={(e) => setCodigo2FA(e.target.value.replace(/\D/g, ''))}
                     placeholder="123456"
-                    className="w-full p-4 border border-gray-300 rounded-lg text-center text-2xl font-mono tracking-widest"
+                    className="w-full p-5 bg-white/10 border border-white/20 text-white rounded-lg text-center text-3xl font-mono tracking-widest placeholder:text-white/30 focus:ring-2 focus:ring-white"
                     autoFocus
                   />
                   
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-4">
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="flex-1 py-3 border border-blue-600 text-blue-600 rounded-lg font-medium"
+                      className="flex-1 py-3.5 border-2 border-white text-white rounded-lg font-medium hover:bg-white/10 transition-colors"
                     >
-                      Voltar
+                      ← Voltar
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-blue-600 text-white py-3 rounded-lg font-medium"
+                      className="flex-1 bg-white text-blue-700 py-3.5 rounded-lg font-medium hover:bg-gray-100 transition-colors shadow-lg"
                     >
-                      Próximo
+                      Próximo →
                     </button>
                   </div>
                 </>
@@ -209,10 +240,12 @@ export default function LoginSecret() {
 
               {step === 'pin' && (
                 <>
-                  <div className="text-center">
-                    <Mail className="w-14 h-14 text-blue-600 mx-auto mb-4" />
-                    <h3 className="font-bold text-gray-800 text-xl">PIN de Confirmação</h3>
-                    <p className="text-gray-600 mt-2">Verifique o PIN enviado para seu e-mail institucional</p>
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-4">
+                      <Mail className="w-8 h-8 text-white" />
+                    </div>
+                    <h3 className="font-bold text-white text-xl">PIN de Confirmação</h3>
+                    <p className="text-white/80 mt-2">Verifique o PIN enviado para seu e-mail institucional</p>
                   </div>
                   
                   <input
@@ -222,23 +255,23 @@ export default function LoginSecret() {
                     value={pinEmail}
                     onChange={(e) => setPinEmail(e.target.value.replace(/\D/g, ''))}
                     placeholder="7890"
-                    className="w-full p-4 border border-gray-300 rounded-lg text-center text-2xl font-mono tracking-widest"
+                    className="w-full p-5 bg-white/10 border border-white/20 text-white rounded-lg text-center text-3xl font-mono tracking-widest placeholder:text-white/30 focus:ring-2 focus:ring-white"
                     autoFocus
                   />
                   
-                  <div className="flex gap-3">
+                  <div className="flex gap-3 pt-4">
                     <button
                       type="button"
                       onClick={handleBack}
-                      className="flex-1 py-3 border border-blue-600 text-blue-600 rounded-lg font-medium"
+                      className="flex-1 py-3.5 border-2 border-white text-white rounded-lg font-medium hover:bg-white/10 transition-colors"
                     >
-                      Voltar
+                      ← Voltar
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium"
+                      className="flex-1 bg-green-500 hover:bg-green-600 text-white py-3.5 rounded-lg font-medium transition-colors shadow-lg"
                     >
-                      Acessar Painel
+                      ✅ Acessar Painel
                     </button>
                   </div>
                 </>
@@ -248,19 +281,17 @@ export default function LoginSecret() {
         )}
       </div>
 
-      {/* LADO DIREITO: Imagem de Nossa Senhora - AGORA COM SUA IMAGEM */}
-      <div className="hidden md:flex md:w-1/2 bg-gradient-to-b from-blue-900 to-blue-700 items-center justify-center p-12">
-        <div className="text-center">
-          <div className="mb-8">
-            <div className="w-80 h-80 mx-auto rounded-full overflow-hidden border-8 border-white/20 shadow-2xl">
-              {/* 🔥 SUA IMAGEM AQUI - caminho correto */}
+      {/* LADO DIREITO: COM O MESMO GRADIENTE DO BOTÃO LOGIN */}
+      <div className="hidden md:flex md:w-1/2 bg-gradient-to-b from-[#051f2c] to-[#2e8cb8] items-center justify-center p-12">
+        <div className="text-center max-w-lg">
+          <div className="mb-10">
+            <div className="w-96 h-96 mx-auto rounded-full overflow-hidden border-8 border-white/30 shadow-2xl">
               <img 
                 src="/snsfoval.png.jpg" 
-                alt="Nossa Senhora de Fátima"
+                alt="Santuário de Fátima"
                 className="w-full h-full object-cover"
                 onError={(e) => {
                   console.log('Erro ao carregar imagem:', e);
-                  // Fallback se a imagem não carregar
                   e.currentTarget.src = 'https://placehold.co/400x400/1e3a8a/ffffff?text=Santuário+de+Fátima';
                 }}
               />
@@ -268,11 +299,14 @@ export default function LoginSecret() {
           </div>
           
           <div className="text-white">
-            <h2 className="text-3xl font-bold mb-4">Santuário de Fátima</h2>
-            <p className="text-white/80 text-lg italic">
-              "Rezai o terço todos os dias para alcançar a paz..."
-            </p>
-            <p className="text-white/60 mt-4">Paróquia Santuário de Fátima</p>
+            <h2 className="text-4xl font-bold mb-6 tracking-tight">Santuário de Fátima</h2>
+            <div className="bg-white/10 backdrop-blur-sm rounded-xl p-6 border border-white/20">
+              <p className="text-white/90 text-xl italic leading-relaxed mb-4">
+                "Rezai o terço todos os dias para alcançar a paz para o mundo e o fim da guerra"
+              </p>
+              <p className="text-white/70">— Nossa Senhora de Fátima, 13 de maio de 1917</p>
+            </div>
+            <p className="text-white/60 mt-8 text-lg">Paróquia Santuário de Fátima</p>
           </div>
           
           <div className="mt-12 pt-8 border-t border-white/20">
@@ -280,6 +314,9 @@ export default function LoginSecret() {
               Sistema Administrativo do Santuário<br />
               Desenvolvido com fé e dedicação
             </p>
+            <div className="flex justify-center mt-4">
+              <div className="w-16 h-1 bg-white/30 rounded-full"></div>
+            </div>
           </div>
         </div>
       </div>
