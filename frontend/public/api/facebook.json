@@ -1,0 +1,29 @@
+// public/api/facebook.json
+{
+  "data": [
+    {
+      "id": "post_001",
+      "message": "Aviso importante: horários da missa atualizados.\n\nSábado: 19h\nDomingo: 7h, 9h, 11h, 19h\n\nConfira nossa programação completa!",
+      "created_time": "2025-02-08T14:05:00Z",
+      "likes": 342,
+      "shares": 89,
+      "comments": 45
+    },
+    {
+      "id": "post_002", 
+      "message": "Inscrições abertas para a Jornada Mundial da Juventude 2025!\n\nVenha fazer parte desta experiência transformadora. Vagas limitadas!",
+      "created_time": "2025-02-07T09:30:00Z",
+      "likes": 512,
+      "shares": 156,
+      "comments": 78
+    },
+    {
+      "id": "post_003",
+      "message": "Retiro espiritual de Carnaval 2025\n\nDias 1 a 4 de março\nLocal: Casa de Retiros São José\n\nInscrições: secretaria@santuariofatima.com",
+      "created_time": "2025-02-05T16:20:00Z",
+      "likes": 289,
+      "shares": 67,
+      "comments": 32
+    }
+  ]
+}

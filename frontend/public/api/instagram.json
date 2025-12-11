@@ -1,0 +1,45 @@
+// public/api/instagram.json
+{
+  "data": [
+    {
+      "id": "123",
+      "caption": "Missa de hoje 🙏\n\nCelebração dominical com a comunidade. A fé que nos une!",
+      "media_type": "IMAGE",
+      "media_url": "/images/instagram/missa_domingo.jpg",
+      "thumbnail_url": "/images/instagram/missa_domingo_thumb.jpg",
+      "timestamp": "2025-02-10T10:30:00Z",
+      "likes": 1245,
+      "comments": 89
+    },
+    {
+      "id": "124",
+      "caption": "Programação da semana!\n\nSegunda: Grupo de Oração 19h\nTerça: Catequese Infantil 14h\nQuarta: Missa dos Enfermos 15h\nQuinta: Estudo Bíblico 19h30\nSexta: Via Sacra 18h",
+      "media_type": "IMAGE",
+      "media_url": "/images/instagram/programacao.jpg",
+      "thumbnail_url": "/images/instagram/programacao_thumb.jpg",
+      "timestamp": "2025-02-09T17:20:00Z",
+      "likes": 892,
+      "comments": 45
+    },
+    {
+      "id": "125",
+      "caption": "Cerimônia de Batizado da pequena Maria ✨\n\nQue Deus abençoe esta nova vida na fé cristã!",
+      "media_type": "IMAGE",
+      "media_url": "/images/instagram/batizado.jpg",
+      "thumbnail_url": "/images/instagram/batizado_thumb.jpg",
+      "timestamp": "2025-02-08T15:45:00Z",
+      "likes": 1567,
+      "comments": 124
+    },
+    {
+      "id": "126",
+      "caption": "Encontro de jovens - Noite de Louvor 🎵\n\nMais de 200 jovens reunidos para celebrar a fé através da música!",
+      "media_type": "IMAGE",
+      "media_url": "/images/instagram/jovens.jpg",
+      "thumbnail_url": "/images/instagram/jovens_thumb.jpg",
+      "timestamp": "2025-02-07T21:10:00Z",
+      "likes": 2103,
+      "comments": 167
+    }
+  ]
+}

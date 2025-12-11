@@ -1,0 +1,93 @@
+// public/api/youtube.json
+{
+  "items": [
+    {
+      "id": "video_001",
+      "snippet": {
+        "title": "Missa ao vivo - Santuário de Fátima",
+        "description": "Celebração diária direto do santuário. Participe conosco desta missa especial!",
+        "thumbnails": {
+          "medium": {
+            "url": "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg"
+          }
+        },
+        "publishedAt": "2025-02-10T12:00:00Z",
+        "channelTitle": "Santuário Nossa Senhora de Fátima"
+      },
+      "statistics": {
+        "viewCount": "15200",
+        "likeCount": "845",
+        "commentCount": "124"
+      },
+      "contentDetails": {
+        "duration": "PT1H25M30S"
+      }
+    },
+    {
+      "id": "video_002",
+      "snippet": {
+        "title": "Catequese Especial - Advento 2024",
+        "description": "Encontro de catequese sobre o significado do Advento na nossa vida espiritual.",
+        "thumbnails": {
+          "medium": {
+            "url": "https://img.youtube.com/vi/abc123/mqdefault.jpg"
+          }
+        },
+        "publishedAt": "2025-02-05T09:15:00Z",
+        "channelTitle": "Santuário Nossa Senhora de Fátima"
+      },
+      "statistics": {
+        "viewCount": "8500",
+        "likeCount": "512",
+        "commentCount": "67"
+      },
+      "contentDetails": {
+        "duration": "PT45M20S"
+      }
+    },
+    {
+      "id": "video_003",
+      "snippet": {
+        "title": "Coral do Santuário - Músicas Sacras",
+        "description": "Apresentação especial do nosso coral com lindas músicas sacras para meditação.",
+        "thumbnails": {
+          "medium": {
+            "url": "https://img.youtube.com/vi/xyz789/mqdefault.jpg"
+          }
+        },
+        "publishedAt": "2025-02-01T18:30:00Z",
+        "channelTitle": "Santuário Nossa Senhora de Fátima"
+      },
+      "statistics": {
+        "viewCount": "22100",
+        "likeCount": "1245",
+        "commentCount": "89"
+      },
+      "contentDetails": {
+        "duration": "PT28M15S"
+      }
+    },
+    {
+      "id": "video_004",
+      "snippet": {
+        "title": "Via Sacra - Sexta-feira Santa",
+        "description": "Cerimônia da Via Sacra realizada durante a Semana Santa no Santuário.",
+        "thumbnails": {
+          "medium": {
+            "url": "https://img.youtube.com/vi/def456/mqdefault.jpg"
+          }
+        },
+        "publishedAt": "2025-01-28T16:45:00Z",
+        "channelTitle": "Santuário Nossa Senhora de Fátima"
+      },
+      "statistics": {
+        "viewCount": "18300",
+        "likeCount": "987",
+        "commentCount": "156"
+      },
+      "contentDetails": {
+        "duration": "PT1H10M45S"
+      }
+    }
+  ]
+}
