@@ -1,0 +1,17 @@
+# docker-compose.prod.yml
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend/Dockerfile.prod  # Dockerfile otimizado para produção
+    environment:
+      - NODE_ENV=production
+    # Remove volumes para produção (imutabilidade)
+    
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile.prod
+    # Sem portas expostas - só via nginx
