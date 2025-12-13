@@ -229,6 +229,89 @@ export default function PainelAdmin() {
     }
   }, [isAuthenticated]);
 
+  // ============ SINCRONIZAÇÃO AUTOMÁTICA ============
+  useEffect(() => {
+    // Dispara evento quando dados são salvos
+    const handleSalvamento = () => {
+      console.log('🔁 Disparando sincronização...');
+      
+      // 1. Salva nos DOIS storages para compatibilidade
+      const dadosAtuais = {
+        carrossel: fotosCarrossel,
+        momentosLiturgicos: eventosLiturgicos,
+        popups: popups,
+        recados: recados,
+        ultimaAtualizacao: new Date().toISOString()
+      };
+      
+      localStorage.setItem('santuario-dados', JSON.stringify(dadosAtuais));
+      localStorage.setItem('dados-santuario', JSON.stringify(dadosAtuais)); // ← COMPATIBILIDADE
+      
+      // 2. Dispara evento customizado
+      window.dispatchEvent(new CustomEvent('dadosAtualizados', {
+        detail: dadosAtuais
+      }));
+      
+      // 3. Dispara evento de storage (para outras abas)
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'dados-santuario',
+        newValue: JSON.stringify(dadosAtuais),
+        url: window.location.href
+      }));
+    };
+    
+    // Executa quando componentes principais mudam
+    handleSalvamento();
+    
+  }, [fotosCarrossel, eventosLiturgicos, popups, recados]);
+
+  // Sincronização automática entre abas
+  useEffect(() => {
+    const sincronizarComOutrasAbas = () => {
+      console.log('🔄 Verificando sincronização entre abas...');
+      
+      // Verifica se há dados em 'santuario-dados' mas não em 'dados-santuario'
+      const dadosNovos = localStorage.getItem('santuario-dados');
+      const dadosAntigos = localStorage.getItem('dados-santuario');
+      
+      if (dadosNovos && (!dadosAntigos || dadosNovos !== dadosAntigos)) {
+        console.log('📤 Sincronizando: santuario-dados → dados-santuario');
+        localStorage.setItem('dados-santuario', dadosNovos);
+      }
+      
+      if (dadosAntigos && (!dadosNovos || dadosAntigos !== dadosNovos)) {
+        console.log('📥 Sincronizando: dados-santuario → santuario-dados');
+        localStorage.setItem('santuario-dados', dadosAntigos);
+      }
+    };
+    
+    // Executa a cada 5 segundos
+    const interval = setInterval(sincronizarComOutrasAbas, 5000);
+    
+    // Escuta eventos de storage de outras abas
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'dados-santuario' && e.newValue) {
+        console.log('📡 Recebendo atualização de outra aba');
+        try {
+          const dados = JSON.parse(e.newValue);
+          setFotosCarrossel(dados.carrossel || []);
+          setEventosLiturgicos(dados.momentosLiturgicos || []);
+          setPopups(dados.popups || []);
+          setRecados(dados.recados || []);
+        } catch (error) {
+          console.error('Erro ao processar atualização:', error);
+        }
+      }
+    };
+    
+    window.addEventListener('storage', handleStorageChange);
+    
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   // ============ FUNÇÕES PRINCIPAIS ============
   const salvarDadosNoLocalStorage = useCallback(() => {
     console.log('💾 Salvando dados...');
@@ -254,24 +337,60 @@ export default function PainelAdmin() {
       }
     }
     setSaveStatus('saving');
+    
     try {
+      // 1. Remove controle de popups para forçar exibição
       localStorage.removeItem('popupFechadoHoje');
-      salvarDadosNoLocalStorage();
+      localStorage.removeItem('popupClosed');
+      localStorage.removeItem('popupLastShown');
+      
+      // 2. Salva dados EM AMBOS OS STORAGES
+      const dadosParaSalvar = {
+        carrossel: fotosCarrossel,
+        momentosLiturgicos: eventosLiturgicos,
+        popups: popups,
+        recados: recados,
+        ultimaAtualizacao: new Date().toISOString()
+      };
+      
+      localStorage.setItem('santuario-dados', JSON.stringify(dadosParaSalvar));
+      localStorage.setItem('dados-santuario', JSON.stringify(dadosParaSalvar)); // ← CRÍTICO!
+      
+      // 3. Também salva recados separadamente para compatibilidade
+      if (recados.length > 0) {
+        const recadosParaSalvar = recados.map(item => ({ ...item, tipo: 'recado' as const }));
+        localStorage.setItem('recados-santuario', JSON.stringify(recadosParaSalvar));
+      }
+      
+      // 4. Dispara eventos para sincronizar outras abas
       window.dispatchEvent(new CustomEvent('dadosAtualizados', {
         detail: { 
           timestamp: new Date().toISOString(),
-          origem: 'PainelAdmin'
+          origem: 'PainelAdmin',
+          dados: dadosParaSalvar
         }
       }));
+      
       window.dispatchEvent(new StorageEvent('storage', {
-        key: 'santuario-dados',
-        newValue: localStorage.getItem('santuario-dados')
+        key: 'dados-santuario',
+        newValue: JSON.stringify(dadosParaSalvar),
+        url: window.location.href,
+        storageArea: localStorage
       }));
+      
+      // 5. Notificação visual
       setTimeout(() => {
         setSaveStatus('published');
-        console.log('🎉 Dados publicados com sucesso!');
+        console.log('🎉 Dados publicados em AMBOS storages!');
+        
+        // Mostra notificação para abrir outras abas
+        if (window.confirm('✅ Dados salvos! Deseja abrir o site em nova aba para testar?')) {
+          window.open('/', '_blank');
+        }
+        
         setTimeout(() => setSaveStatus('idle'), 3000);
       }, 1000);
+      
     } catch (error) {
       console.error('❌ ERRO AO SALVAR:', error);
       setSaveStatus('error');
@@ -655,60 +774,93 @@ export default function PainelAdmin() {
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
+        {/* ADICIONE ESTE DIV PARA ESPAÇAMENTO */}
+        <div className="mt-6"></div> {/* ← NOVA LINHA PARA ESPAÇO */}
+        
+        {/* Dashboard com MAIS MARGEM SUPERIOR */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 mt-10"> {/* ← mt-10 adicionado */}
+          
+          {/* Primeiro card - com ESPAÇAMENTO INTERNO MAIOR */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"> {/* ← p-6 */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Carrossel Home</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">
+                <p className="text-sm text-gray-500 font-medium">Carrossel Home</p>
+                <p className="text-2xl font-bold text-gray-800 mt-2"> {/* ← mt-2 */}
                   {fotosCarrossel.filter(item => item.ativo).length}
+                  <span className="text-sm font-normal text-gray-500 ml-1">
+                    / {fotosCarrossel.length}
+                  </span>
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Imagens ativas</p>
+                <p className="text-xs text-gray-500 mt-2"> {/* ← mt-2 */}
+                  {fotosCarrossel.length === 0 ? 'Nenhuma imagem' : 
+                   `${fotosCarrossel.filter(f => f.ativo).length} ativas`}
+                </p>
               </div>
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Image className="text-blue-600" size={24} />
+              <div className="p-3 bg-blue-100 rounded-lg shadow-inner">
+                <Image className="text-blue-600" size={26} /> {/* ← size aumentado */}
               </div>
             </div>
           </div>
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
+          
+          {/* Segundo card com mesmo padrão */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Momentos Litúrgicos</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">
+                <p className="text-sm text-gray-500 font-medium">Momentos Litúrgicos</p>
+                <p className="text-2xl font-bold text-gray-800 mt-2">
                   {eventosLiturgicos.filter(item => item.ativo).length}
+                  <span className="text-sm font-normal text-gray-500 ml-1">
+                    / {eventosLiturgicos.length}
+                  </span>
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Períodos ativos</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Períodos ativos
+                </p>
               </div>
-              <div className="p-3 bg-purple-100 rounded-lg">
-                <Calendar className="text-purple-600" size={24} />
+              <div className="p-3 bg-purple-100 rounded-lg shadow-inner">
+                <Calendar className="text-purple-600" size={26} />
               </div>
             </div>
           </div>
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
+          
+          {/* Terceiro card com mesmo padrão */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Popups Ativos</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">
+                <p className="text-sm text-gray-500 font-medium">Popups Ativos</p>
+                <p className="text-2xl font-bold text-gray-800 mt-2">
                   {popups.filter(p => p.ativo).length}
+                  <span className="text-sm font-normal text-gray-500 ml-1">
+                    / {popups.length}
+                  </span>
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Avisos no site</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Avisos no site
+                </p>
               </div>
-              <div className="p-3 bg-yellow-100 rounded-lg">
-                <Bell className="text-yellow-600" size={24} />
+              <div className="p-3 bg-yellow-100 rounded-lg shadow-inner">
+                <Bell className="text-yellow-600" size={26} />
               </div>
             </div>
           </div>
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
+          
+          {/* Quarto card com mesmo padrão */}
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Recados</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">
+                <p className="text-sm text-gray-500 font-medium">Recados</p>
+                <p className="text-2xl font-bold text-gray-800 mt-2">
                   {recados.filter(item => item.ativo).length}
+                  <span className="text-sm font-normal text-gray-500 ml-1">
+                    / {recados.length}
+                  </span>
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Avisos importantes</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Avisos importantes
+                </p>
               </div>
-              <div className="p-3 bg-red-100 rounded-lg">
-                <AlertCircle className="text-red-600" size={24} />
+              <div className="p-3 bg-red-100 rounded-lg shadow-inner">
+                <AlertCircle className="text-red-600" size={26} />
               </div>
             </div>
           </div>
