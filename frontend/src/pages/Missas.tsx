@@ -379,13 +379,15 @@ export default function MissasPreview() {
           <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-4 sm:p-6 shadow-sm border-l-4 border-yellow-500">
             <div className="flex items-start gap-3 sm:gap-4">
               <div className="bg-yellow-100 rounded-full p-2 sm:p-3 flex-shrink-0">
-                <BookOpen className="text-yellow-600" size={20} sm:size={24} />
+                <BookOpen className="text-yellow-600" size={20} sm:size={26} />
               </div>
               <div>
                 <h3 className="font-bold text-gray-900 mb-2 text-lg sm:text-xl">Atenção!</h3>
                 <p className="text-gray-700 leading-relaxed text-sm sm:text-base">
-                  Os horários podem sofrer alterações em feriados ou datas especiais. 
-                  Consulte nosso calendário de eventos ou entre em contato para mais informações.
+                  Os horários podem sofrer alterações em 13 de maio, nas Festas Juninas, no final de ano e no mês de janeiro. 
+                  Favor ficar atento aos avisos. 
+                  Consulte nosso calendário de eventos ou 
+                  entre em contato para mais informações.
                 </p>
               </div>
             </div>

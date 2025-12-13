@@ -16,11 +16,11 @@ export default function Doacoes() {
     <div className="min-h-screen bg-gray-50">
 
       {/* 🔵 BANNER PROFISSIONAL — ALTURA AUMENTADA */}
-      <div className="relative w-full h-70 md:h-[30rem] flex items-center justify-center overflow-hidden shadow-lg mb-12">
+      <div className="relative w-full h-85 md:h-[40rem] flex items-center justify-center overflow-hidden shadow-lg mb-12">
         <img
           src="/doacoesbanner.png"
           alt="Banner de Doações"
-          className="w-full h-full object-cover object-center"
+          className="w-full h-full object-cover object-[center_20%] md:object-[center_30%]"
         />
 
         {/* Overlay escurecido */}
@@ -126,7 +126,7 @@ export default function Doacoes() {
           />
         </div>
 
-	{/* Onde Sua Doação Será Aplicada */}
+        {/* Onde Sua Doação Será Aplicada */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold text-gray-900 mb-8">Onde Sua Doação Será Aplicada</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

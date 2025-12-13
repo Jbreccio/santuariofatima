@@ -1,3 +1,4 @@
+// pages/MomentosLiturgicos.tsx
 import React, { useState, useEffect } from 'react';
 import Navigation from "../components/layout/Navigation";
 import Footer from "../components/layout/Footer";
@@ -11,7 +12,6 @@ interface Recado {
   imagem?: string;
   ativo: boolean;
   dataCriacao: string;
-  intervaloPopup?: number;
   local?: string;
   data?: string;
   hora?: string;
@@ -21,7 +21,6 @@ interface CarrosselItem {
   id: string;
   imagem: string;
   titulo?: string;
-  descricao?: string;
   ordem: number;
   ativo: boolean;
   local: string;
@@ -66,12 +65,10 @@ const CarrosselCinzas = ({ slides }: { slides: CarrosselItem[] }) => {
             }`}
           >
             <div className="relative w-full h-full">
-              {/* Imagem de fundo com blur */}
               <div 
                 className="absolute inset-0 bg-cover bg-center blur-sm scale-105"
                 style={{ backgroundImage: `url(${slide.imagem})` }}
               />
-              {/* Imagem principal */}
               <img
                 src={slide.imagem}
                 alt={slide.titulo || 'Imagem Cinzas'}
@@ -91,7 +88,6 @@ const CarrosselCinzas = ({ slides }: { slides: CarrosselItem[] }) => {
                   }
                 }}
               />
-              {/* Overlay para título */}
               {slide.titulo && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                   <h3 className="text-white font-semibold text-center">{slide.titulo}</h3>
@@ -101,7 +97,6 @@ const CarrosselCinzas = ({ slides }: { slides: CarrosselItem[] }) => {
           </div>
         ))}
 
-        {/* Controles - só mostra se tiver mais de 1 slide */}
         {slides.length > 1 && (
           <>
             <button
@@ -119,7 +114,6 @@ const CarrosselCinzas = ({ slides }: { slides: CarrosselItem[] }) => {
           </>
         )}
 
-        {/* Indicadores - só mostra se tiver mais de 1 slide */}
         {slides.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
             {slides.map((_, idx) => (
@@ -177,12 +171,10 @@ const CarrosselJubileo = ({ slides }: { slides: CarrosselItem[] }) => {
             }`}
           >
             <div className="relative w-full h-full">
-              {/* Imagem de fundo com blur */}
               <div 
                 className="absolute inset-0 bg-cover bg-center blur-sm scale-105"
                 style={{ backgroundImage: `url(${slide.imagem})` }}
               />
-              {/* Imagem principal */}
               <img
                 src={slide.imagem}
                 alt={slide.titulo || 'Imagem Jubileu'}
@@ -202,7 +194,6 @@ const CarrosselJubileo = ({ slides }: { slides: CarrosselItem[] }) => {
                   }
                 }}
               />
-              {/* Overlay para título */}
               {slide.titulo && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                   <h3 className="text-white font-semibold text-center">{slide.titulo}</h3>
@@ -212,7 +203,6 @@ const CarrosselJubileo = ({ slides }: { slides: CarrosselItem[] }) => {
           </div>
         ))}
 
-        {/* Controles - só mostra se tiver mais de 1 slide */}
         {slides.length > 1 && (
           <>
             <button
@@ -230,7 +220,6 @@ const CarrosselJubileo = ({ slides }: { slides: CarrosselItem[] }) => {
           </>
         )}
 
-        {/* Indicadores - só mostra se tiver mais de 1 slide */}
         {slides.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
             {slides.map((_, idx) => (
@@ -288,12 +277,10 @@ const CarrosselDomingoRamos = ({ slides }: { slides: CarrosselItem[] }) => {
             }`}
           >
             <div className="relative w-full h-full">
-              {/* Imagem de fundo com blur */}
               <div 
                 className="absolute inset-0 bg-cover bg-center blur-sm scale-105"
                 style={{ backgroundImage: `url(${slide.imagem})` }}
               />
-              {/* Imagem principal */}
               <img
                 src={slide.imagem}
                 alt={slide.titulo || 'Imagem Domingo de Ramos'}
@@ -313,7 +300,6 @@ const CarrosselDomingoRamos = ({ slides }: { slides: CarrosselItem[] }) => {
                   }
                 }}
               />
-              {/* Overlay para título */}
               {slide.titulo && (
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                   <h3 className="text-white font-semibold text-center">{slide.titulo}</h3>
@@ -323,7 +309,6 @@ const CarrosselDomingoRamos = ({ slides }: { slides: CarrosselItem[] }) => {
           </div>
         ))}
 
-        {/* Controles - só mostra se tiver mais de 1 slide */}
         {slides.length > 1 && (
           <>
             <button
@@ -341,7 +326,6 @@ const CarrosselDomingoRamos = ({ slides }: { slides: CarrosselItem[] }) => {
           </>
         )}
 
-        {/* Indicadores - só mostra se tiver mais de 1 slide */}
         {slides.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
             {slides.map((_, idx) => (
@@ -360,7 +344,7 @@ const CarrosselDomingoRamos = ({ slides }: { slides: CarrosselItem[] }) => {
   );
 };
 
-export default function Eventos() {
+export default function MomentosLiturgicos() {
   const [recados, setRecados] = useState<Recado[]>([]);
   const [eventos, setEventos] = useState<Recado[]>([]);
   const [carrosselCinzas, setCarrosselCinzas] = useState<CarrosselItem[]>([]);
@@ -368,173 +352,79 @@ export default function Eventos() {
   const [carrosselDomingoRamos, setCarrosselDomingoRamos] = useState<CarrosselItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Carregar dados do localStorage
+  // ✅ CARREGA DADOS DO LOCALSTORAGE CORRETO
   useEffect(() => {
     const carregarDados = () => {
       try {
-        // Tenta carregar do NOVO sistema (dados-santuario)
-        const dadosNovos = localStorage.getItem('dados-santuario');
-        if (dadosNovos) {
-          const parsed = JSON.parse(dadosNovos);
-          
-          // Carregar carrossel Cinzas
-          const cinzas = parsed.carrosselCinzas || [];
-          const cinzasAtivas = cinzas.filter((item: any) => item.ativo === true);
-          cinzasAtivas.sort((a: any, b: any) => a.ordem - b.ordem);
-          setCarrosselCinzas(cinzasAtivas);
-          
-          // Carregar carrossel Jubileu
-          const jubileu = parsed.carrosselJubileu || [];
-          const jubileuAtivas = jubileu.filter((item: any) => item.ativo === true);
-          jubileuAtivas.sort((a: any, b: any) => a.ordem - b.ordem);
-          setCarrosselJubileu(jubileuAtivas);
-          
-          // Carregar carrossel Domingo de Ramos
-          const domingoRamos = parsed.carrosselDomingoRamos || [];
-          const domingoRamosAtivas = domingoRamos.filter((item: any) => item.ativo === true);
-          domingoRamosAtivas.sort((a: any, b: any) => a.ordem - b.ordem);
-          setCarrosselDomingoRamos(domingoRamosAtivas);
-          
-          // Carregar eventos e recados do NOVO sistema
-          if (parsed.eventos) {
-            const eventosAtivos = parsed.eventos.filter((item: any) => item.ativo === true);
-            setEventos(eventosAtivos);
-          }
-          
-          if (parsed.recados) {
-            const recadosAtivos = parsed.recados.filter((item: any) => item.ativo === true);
-            setRecados(recadosAtivos);
-          }
-          
-          setLoading(false);
-          return;
-        }
-        
-        // Se não encontrar no novo sistema, tenta carregar do ANTIGO (recados-santuario)
-        const dadosAntigos = localStorage.getItem('recados-santuario');
-        if (dadosAntigos) {
-          const todosRecados: Recado[] = JSON.parse(dadosAntigos);
-          const ativos = todosRecados.filter(r => r.ativo);
-          
-          // Separar eventos e recados
-          setEventos(ativos.filter(r => r.tipo === 'evento'));
-          setRecados(ativos.filter(r => r.tipo === 'recado'));
-          
-          // Para carrosséis, usa imagens padrão se não houver no novo sistema
-          if (carrosselCinzas.length === 0) {
-            setCarrosselCinzas([
-              { id: 'cinzas1', imagem: '/Cinzas1.png', titulo: 'Cinzas 2025', ordem: 0, ativo: true, local: 'eventos-cinzas' },
-              { id: 'cinzas02', imagem: '/Cinzas02.png', titulo: 'Celebração das Cinzas', ordem: 1, ativo: true, local: 'eventos-cinzas' },
-              { id: 'cinzas03', imagem: '/Cinzas03.png', titulo: 'Momento de Reflexão', ordem: 2, ativo: true, local: 'eventos-cinzas' },
-              { id: 'cinzas4', imagem: '/Cinzas4.png', titulo: 'Comunidade em Oração', ordem: 3, ativo: true, local: 'eventos-cinzas' },
-              { id: 'cinzas5', imagem: '/Cinzas5.png', titulo: 'Renovação Espiritual', ordem: 4, ativo: true, local: 'eventos-cinzas' },
-              { id: 'cinzas6', imagem: '/Cinzas6.png', titulo: 'Preparação Pascal', ordem: 5, ativo: true, local: 'eventos-cinzas' }
-            ]);
-          }
-          
-          if (carrosselJubileu.length === 0) {
-            setCarrosselJubileu([
-              { id: 'jubileo1', imagem: '/Jubileo.png', titulo: 'Ano Jubilar 2025', ordem: 0, ativo: true, local: 'eventos-jubileu' },
-              { id: 'jubileo2', imagem: '/Jubileo2.png', titulo: 'Celebração Jubilar', ordem: 1, ativo: true, local: 'eventos-jubileu' },
-              { id: 'jubileo3', imagem: '/Jubileo3.png', titulo: 'Peregrinação', ordem: 2, ativo: true, local: 'eventos-jubileu' },
-              { id: 'jubileo4', imagem: '/Jubileo4.png', titulo: 'Encontro de Fé', ordem: 3, ativo: true, local: 'eventos-jubileu' },
-              { id: 'jubileo5', imagem: '/Jubileo5.png', titulo: 'Graças e Bênçãos', ordem: 4, ativo: true, local: 'eventos-jubileu' },
-              { id: 'jubileo6', imagem: '/Jubileo6.png', titulo: 'Renovação Espiritual', ordem: 5, ativo: true, local: 'eventos-jubileu' }
-            ]);
+        const dados = localStorage.getItem('santuario-dados');
+        if (dados) {
+          const { momentosLiturgicos = [], recados: recadosSalvos = [], eventos: eventosSalvos = [] } = JSON.parse(dados);
+
+          // Processa Cinzas
+          const cinzas = momentosLiturgicos.find(m => 
+            m.periodo.toLowerCase().includes('cinzas') || 
+            m.tituloFaixa.toLowerCase().includes('cinzas')
+          );
+          if (cinzas && cinzas.ativo) {
+            setCarrosselCinzas(cinzas.imagens.map((img, i) => ({
+              id: `cinzas-${i}`,
+              imagem: img,
+              titulo: cinzas.tituloFaixa,
+              ordem: i,
+              ativo: true,
+              local: 'eventos-cinzas'
+            })));
           }
 
-          // Domingo de Ramos - imagens padrão
-          if (carrosselDomingoRamos.length === 0) {
-            setCarrosselDomingoRamos([
-              { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
-              { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' },
-              { id: 'ramos01', imagem: '/ramos01.png', titulo: 'Celebração de Ramos', ordem: 2, ativo: true, local: 'eventos-ramos' },
-              { id: 'ramos02', imagem: '/ramos02.png', titulo: 'Celebração de Ramos', ordem: 3, ativo: true, local: 'eventos-ramos' },
-              { id: 'ramos03', imagem: '/ramos03.png', titulo: 'Celebração de Ramos', ordem: 5, ativo: true, local: 'eventos-ramos' },
-              { id: 'ramos04', imagem: '/ramos04.png', titulo: 'Celebração de Ramos', ordem: 6, ativo: true, local: 'eventos-ramos' },
-              { id: 'ramos05', imagem: '/ramos05.png', titulo: 'Celebração de Ramos', ordem: 7, ativo: true, local: 'eventos-ramos' }
-        ]);
+          // Processa Jubileu
+          const jubileu = momentosLiturgicos.find(m => 
+            m.periodo.toLowerCase().includes('jubileu') || 
+            m.tituloFaixa.toLowerCase().includes('jubileu') ||
+            m.tituloFaixa.toLowerCase().includes('jubilar')
+          );
+          if (jubileu && jubileu.ativo) {
+            setCarrosselJubileu(jubileu.imagens.map((img, i) => ({
+              id: `jubileu-${i}`,
+              imagem: img,
+              titulo: jubileu.tituloFaixa,
+              ordem: i,
+              ativo: true,
+              local: 'eventos-jubileu'
+            })));
+          }
 
-                     }
-        } else {
-          // Se não houver dados no localStorage, usa imagens padrão
-          setCarrosselCinzas([
-            { id: 'cinzas1', imagem: '/Cinzas1.png', titulo: 'Cinzas 2025', ordem: 0, ativo: true, local: 'eventos-cinzas' },
-            { id: 'cinzas02', imagem: '/Cinzas02.png', titulo: 'Celebração das Cinzas', ordem: 1, ativo: true, local: 'eventos-cinzas' },
-            { id: 'cinzas03', imagem: '/Cinzas03.png', titulo: 'Momento de Reflexão', ordem: 2, ativo: true, local: 'eventos-cinzas' },
-            { id: 'cinzas4', imagem: '/Cinzas4.png', titulo: 'Comunidade em Oração', ordem: 3, ativo: true, local: 'eventos-cinzas' },
-            { id: 'cinzas5', imagem: '/Cinzas5.png', titulo: 'Renovação Espiritual', ordem: 4, ativo: true, local: 'eventos-cinzas' },
-            { id: 'cinzas6', imagem: '/Cinzas6.png', titulo: 'Preparação Pascal', ordem: 5, ativo: true, local: 'eventos-cinzas' }
-          ]);
-          
-          setCarrosselJubileu([
-            { id: 'jubileo1', imagem: '/Jubileo.png', titulo: 'Ano Jubilar 2025', ordem: 0, ativo: true, local: 'eventos-jubileu' },
-            { id: 'jubileo2', imagem: '/Jubileo2.png', titulo: 'Celebração Jubilar', ordem: 1, ativo: true, local: 'eventos-jubileu' },
-            { id: 'jubileo3', imagem: '/Jubileo3.png', titulo: 'Peregrinação', ordem: 2, ativo: true, local: 'eventos-jubileu' },
-            { id: 'jubileo4', imagem: '/Jubileo4.png', titulo: 'Encontro de Fé', ordem: 3, ativo: true, local: 'eventos-jubileu' },
-            { id: 'jubileo5', imagem: '/Jubileo5.png', titulo: 'Graças e Bênçãos', ordem: 4, ativo: true, local: 'eventos-jubileu' },
-            { id: 'jubileo6', imagem: '/Jubileo6.png', titulo: 'Renovação Espiritual', ordem: 5, ativo: true, local: 'eventos-jubileu' }
-          ]);
+          // Processa Domingo de Ramos
+          const ramos = momentosLiturgicos.find(m => 
+            m.periodo.toLowerCase().includes('ramos') || 
+            m.tituloFaixa.toLowerCase().includes('ramos')
+          );
+          if (ramos && ramos.ativo) {
+            setCarrosselDomingoRamos(ramos.imagens.map((img, i) => ({
+              id: `ramos-${i}`,
+              imagem: img,
+              titulo: ramos.tituloFaixa,
+              ordem: i,
+              ativo: true,
+              local: 'eventos-ramos'
+            })));
+          }
 
-          // Domingo de Ramos - imagens padrão
-          setCarrosselDomingoRamos([
-            { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
-            { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' },
-            { id: 'ramos01', imagem: '/ramos01.png', titulo: 'Celebração de Ramos', ordem: 2, ativo: true, local: 'eventos-ramos' },
-            { id: 'ramos02', imagem: '/ramos02.png', titulo: 'Celebração de Ramos', ordem: 3, ativo: true, local: 'eventos-ramos' },
-            { id: 'ramos03', imagem: '/ramos03.png', titulo: 'Celebração de Ramos', ordem: 5, ativo: true, local: 'eventos-ramos' },
-            { id: 'ramos04', imagem: '/ramos04.png', titulo: 'Celebração de Ramos', ordem: 6, ativo: true, local: 'eventos-ramos' },
-            { id: 'ramos05', imagem: '/ramos05.png', titulo: 'Celebração de Ramos', ordem: 7, ativo: true, local: 'eventos-ramos' }
-        ]);
-        
+          setRecados(recadosSalvos.filter((r: any) => r.ativo));
+          setEventos(eventosSalvos?.filter((e: any) => e.ativo) || []);
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        // Em caso de erro, usa imagens padrão
-        setCarrosselCinzas([
-          { id: 'cinzas1', imagem: '/Cinzas1.png', titulo: 'Cinzas 2025', ordem: 0, ativo: true, local: 'eventos-cinzas' },
-          { id: 'cinzas02', imagem: '/Cinzas02.png', titulo: 'Celebração das Cinzas', ordem: 1, ativo: true, local: 'eventos-cinzas' },
-          { id: 'cinzas03', imagem: '/Cinzas03.png', titulo: 'Momento de Reflexão', ordem: 2, ativo: true, local: 'eventos-cinzas' },
-          { id: 'cinzas4', imagem: '/Cinzas4.png', titulo: 'Comunidade em Oração', ordem: 3, ativo: true, local: 'eventos-cinzas' },
-          { id: 'cinzas5', imagem: '/Cinzas5.png', titulo: 'Renovação Espiritual', ordem: 4, ativo: true, local: 'eventos-cinzas' },
-          { id: 'cinzas6', imagem: '/Cinzas6.png', titulo: 'Preparação Pascal', ordem: 5, ativo: true, local: 'eventos-cinzas' }
-        ]);
-        
-        setCarrosselJubileu([
-          { id: 'jubileo1', imagem: '/Jubileo.png', titulo: 'Ano Jubilar 2025', ordem: 0, ativo: true, local: 'eventos-jubileu' },
-          { id: 'jubileo2', imagem: '/Jubileo2.png', titulo: 'Celebração Jubilar', ordem: 1, ativo: true, local: 'eventos-jubileu' },
-          { id: 'jubileo3', imagem: '/Jubileo3.png', titulo: 'Peregrinação', ordem: 2, ativo: true, local: 'eventos-jubileu' },
-          { id: 'jubileo4', imagem: '/Jubileo4.png', titulo: 'Encontro de Fé', ordem: 3, ativo: true, local: 'eventos-jubileu' },
-          { id: 'jubileo5', imagem: '/Jubileo5.png', titulo: 'Graças e Bênçãos', ordem: 4, ativo: true, local: 'eventos-jubileu' },
-          { id: 'jubileo6', imagem: '/Jubileo6.png', titulo: 'Renovação Espiritual', ordem: 5, ativo: true, local: 'eventos-jubileu' }
-        ]);
-
-        // Domingo de Ramos
-        setCarrosselDomingoRamos([
-          { id: 'ramos1', imagem: '/altarfrente.png', titulo: 'Domingo de Ramos 2025', ordem: 0, ativo: true, local: 'eventos-ramos' },
-          { id: 'ramos2', imagem: '/snsf.png', titulo: 'Celebração de Ramos', ordem: 1, ativo: true, local: 'eventos-ramos' },
-          { id: 'ramos01', imagem: '/ramos01.png', titulo: 'Celebração de Ramos', ordem: 2, ativo: true, local: 'eventos-ramos' },
-          { id: 'ramos02', imagem: '/ramos02.png', titulo: 'Celebração de Ramos', ordem: 3, ativo: true, local: 'eventos-ramos' },
-          { id: 'ramos03', imagem: '/ramos03.png', titulo: 'Celebração de Ramos', ordem: 4, ativo: true, local: 'eventos-ramos' },
-          { id: 'ramos04', imagem: '/ramos04.png', titulo: 'Celebração de Ramos', ordem: 5, ativo: true, local: 'eventos-ramos' },
-          { id: 'ramos05', imagem: '/ramos05.png', titulo: 'Celebração de Ramos', ordem: 6, ativo: true, local: 'eventos-ramos' }
-        ]);
-    
-
       } finally {
         setLoading(false);
       }
     };
 
     carregarDados();
-    
-    // Atualizar quando houver mudanças no localStorage
-    const handleStorageChange = () => {
-      carregarDados();
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+
+    // ✅ ESCUTA ATUALIZAÇÕES EM TEMPO REAL
+    const aoAtualizar = () => carregarDados();
+    window.addEventListener('dadosAtualizados', aoAtualizar);
+    return () => window.removeEventListener('dadosAtualizados', aoAtualizar);
   }, []);
 
   if (loading) {
@@ -544,7 +434,7 @@ export default function Eventos() {
         <main className="flex-grow max-w-7xl mx-auto px-4 py-8 w-full flex items-center justify-center">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">Carregando eventos...</p>
+            <p className="text-gray-600">Carregando momentos litúrgicos...</p>
           </div>
         </main>
         <Footer />
@@ -555,20 +445,34 @@ export default function Eventos() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-blue-50">
       <Navigation />
-        {/* BANNER MOMENTOS LITÚRGICOS NO TOPO */}
-        <div className="w-full mt-20">
-        <img 
-          src="/BannerML.png"
-          alt="Momentos Litúrgicos"
-          className="w-full max-h-[520 ppx] object-cover"
+      
+      {/* BANNER */}
+      <section className="relative w-full overflow-hidden bg-gray-900 mt-20">
+        <div className="relative h-[500px] sm:h-[500px] md:h-[500px] lg:h-[750px] overflow-hidden">
+          <img 
+            src="/BannerML.png"
+            alt="Momentos Litúrgicos"
+            className="absolute inset-0 w-full h-full object-cover"
           />
-      </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-center">
+            <div className="text-center px-4 max-w-4xl mx-auto">
+              <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-6xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg">
+                Momentos Litúrgicos
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-white/90 max-w-3xl mx-auto px-4 drop-shadow-md">
+                No Santuário de Fátima, cada liturgia é um convite para renovar a fé e sentir o cuidado materno de Maria
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-blue-500"></div>
+      </section>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
-        {/* === SEÇÃO CINZAS 2025 COM CARROSSEL === */}
+        {/* CINZAS */}
         <section className="mb-12">
-          {/* CONTAINER ROXO COM MARGEM SUPERIOR ADICIONADA */}
-          <div className="mb-6 mt-30">
+          <div className="mb-6">
             <div className="bg-gradient-to-r from-purple-900 to-purple-700 rounded-xl p-6 shadow-lg">
               <h1 className="text-3xl font-bold text-white mb-1">CINZAS 2025</h1>
               <p className="text-lg text-purple-100">
@@ -576,12 +480,10 @@ export default function Eventos() {
               </p>
             </div>
           </div>
-
-          {/* Carrossel de Cinzas - Carregado do Painel Admin */}
           <CarrosselCinzas slides={carrosselCinzas} />
         </section>
 
-        {/* === SEÇÃO ANO JUBILAR 2025 COM CARROSSEL === */}
+        {/* JUBILEU */}
         <section className="mb-12">
           <div className="mb-6">
             <div className="bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl p-6 shadow-lg">
@@ -591,15 +493,12 @@ export default function Eventos() {
               </p>
             </div>
           </div>
-
-          {/* Carrossel de Jubileo - Carregado do Painel Admin */}
           <CarrosselJubileo slides={carrosselJubileu} />
         </section>
 
-        {/* === NOVA SEÇÃO: DOMINGO DE RAMOS 2025 COM CARROSSEL === */}
+        {/* DOMINGO DE RAMOS */}
         <section className="mb-12">
           <div className="mb-6">
-            {/* FAIXA VERMELHA PARA DOMINGO DE RAMOS - CORRETA */}
             <div className="bg-gradient-to-r from-red-700 to-red-900 rounded-xl p-6 shadow-lg">
               <h1 className="text-3xl font-bold text-white mb-1">DOMINGO DE RAMOS 2025</h1>
               <p className="text-lg text-red-100">
@@ -607,26 +506,18 @@ export default function Eventos() {
               </p>
             </div>
           </div>
-
-          {/* Carrossel de Domingo de Ramos - Carregado do Painel Admin */}
           <CarrosselDomingoRamos slides={carrosselDomingoRamos} />
         </section>
 
-        {/* Momentos Litúrgicos - Gerenciados pelo Painel Admin */}
+        {/* EVENTOS */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4 text-gray-900">Próximos Eventos</h2>
           <p className="text-lg text-gray-600 mb-6">
             Confira os próximos eventos e celebrações de nossa paróquia
           </p>
-
           {eventos.length === 0 ? (
             <div className="text-center py-8 bg-white rounded-lg border-2 border-dashed border-gray-300">
               <p className="text-gray-500">Nenhum evento cadastrado no momento</p>
-              <p className="text-sm text-gray-400 mt-1">
-                {localStorage.getItem('dados-santuario') 
-                  ? 'Crie eventos pelo Painel Admin' 
-                  : 'Os eventos aparecerão aqui quando forem criados'}
-              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -657,7 +548,6 @@ export default function Eventos() {
                     )}
                   </div>
                   <p className="text-gray-700 text-sm">{evento.conteudo}</p>
-                  
                   {evento.imagem && (
                     <div className="mt-3">
                       <img 
@@ -673,18 +563,12 @@ export default function Eventos() {
           )}
         </section>
 
-        {/* ✅ RECADOS - Gerenciados pelo Painel Admin */}
+        {/* RECADOS */}
         <section>
           <h2 className="text-2xl font-bold mb-6 text-gray-900">Recados Importantes</h2>
-          
           {recados.length === 0 ? (
             <div className="text-center py-6 bg-white rounded-lg border-2 border-dashed border-gray-300">
               <p className="text-gray-500">Nenhum recado no momento</p>
-              <p className="text-sm text-gray-400 mt-1">
-                {localStorage.getItem('dados-santuario') 
-                  ? 'Crie recados pelo Painel Admin' 
-                  : 'Os recados aparecerão aqui quando forem criados'}
-              </p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -695,7 +579,6 @@ export default function Eventos() {
                     <span className="text-xs text-gray-500">{recado.dataCriacao}</span>
                   </div>
                   <p className="text-gray-700 text-sm">{recado.conteudo}</p>
-                  
                   {recado.imagem && (
                     <div className="mt-3">
                       <img 

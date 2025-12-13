@@ -19,19 +19,18 @@ export default function Navigation() {
   }
 
   const navItems = [
-    { href: '/', label: 'Início' },
-    { href: '/historia', label: 'História' },
-    { href: '/pastorais', label: 'Pastorais' },
-    { href: '/santododia', label: 'Santo do Dia' },
-    { href: '/doacoes', label: 'Doações' },
-    { href: '/momentosliturgicos', label: 'Momentos Litúrgicos' },
-    { href: '/missas', label: 'Missas' },
-    { href: '/calendarioliturgico', label: 'Calendario Litúrgico' },
-    { href: '/contato', label: 'Contato' },
-    { href: '/localizacao', label: 'Localização' },
-    { href: '/sobrenos', label: 'Sobre Nós' },
-  ];
-
+  { href: '/', label: 'Início' },
+  { href: '/historia', label: 'História' },
+  { href: '/pastorais', label: 'Pastorais' },
+  { href: '/santo-do-dia', label: 'Santo do Dia' }, // ← COM hífen
+  { href: '/doacoes', label: 'Doações' },
+  { href: '/momentosliturgicos', label: 'Momentos Litúrgicos' },
+  { href: '/missas', label: 'Missas' },
+  { href: '/calendarioliturgico', label: 'Calendário Litúrgico' }, // ← COM hífen
+  { href: '/contato', label: 'Contato' },
+  { href: '/localizacao', label: 'Localização' },
+  { href: '/sobre-nos', label: 'Sobre Nós' }, // ← COM hífen
+];
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-[#4094bb]">

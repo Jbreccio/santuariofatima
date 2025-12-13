@@ -41,7 +41,7 @@ export default function LoginSecret() {
       if (pinEmail === CREDENCIAIS_ADMIN.pinEmail) {
         localStorage.setItem('admin_token', 'authenticated');
         localStorage.setItem('admin_user', credenciais.usuario);
-        navigate('/admin');
+        navigate('/paineladmin');
       } else {
         setError('PIN de e-mail incorreto.');
       }

@@ -1,36 +1,46 @@
-import { BrowserRouter } from "react-router-dom";
-import { Toaster } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import Popup from "./components/popup/popup";
-import ErrorBoundary from "./components/ErrorBoundary";
-import Navigation from "./components/layout/Navigation";
-import WhatsAppButton from './components/layout/WhatsAppButton';
-import AppRoutes from "./routes/AppRoutes";
+﻿// frontend/src/App.tsx - NÃO MUDE NADA!
+import React, { useEffect, useState } from "react"
+import { BrowserRouter } from "react-router-dom"
+import Popup from './components/popup/popup';
+import AppRoutes from "./routes/AppRoutes"; // ← ADICIONE ESTA LINHA
+import WhatsAppButton from "./components/layout/WhatsAppButton"
+import Navigation from "./components/layout/Navigation"
+import { ConteudoProvider } from "./contexts/ConteudoContext"
 
-import { AuthProvider } from "./contexts/AuthContext";
-import { RecadosProvider } from "./contexts/RecadosContext";
-import { ThemeProvider } from "./contexts/ThemeContext";
+function App() {
+  const [loading, setLoading] = useState(true)
 
-export default function App() {
+  useEffect(() => {
+    const timer = setTimeout(() => setLoading(false), 1000)
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Carregando Santuário de Fátima...</p>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <ErrorBoundary>
-      <AuthProvider>
-        <RecadosProvider>
-          <ThemeProvider defaultTheme="light">
-            <TooltipProvider>
-              <Toaster />
-
-              <BrowserRouter>
-                <Navigation />
-                <Popup />    
-                <AppRoutes />
-                 
-                <WhatsAppButton />
-              </BrowserRouter>
-            </TooltipProvider>
-          </ThemeProvider>
-        </RecadosProvider>
-      </AuthProvider>
-    </ErrorBoundary>
-  );
+    <ConteudoProvider>
+      <BrowserRouter>
+        <div className="min-h-screen flex flex-col bg-white">
+          <Navigation />
+          <main className="flex-grow">
+            {/* ⭐⭐ APENAS AppRoutes AQUI ⭐⭐ */}
+            <AppRoutes />
+          </main>
+          <Popup />
+          <WhatsAppButton />
+        </div>
+      </BrowserRouter>
+    </ConteudoProvider>
+  )
 }
+
+export default App

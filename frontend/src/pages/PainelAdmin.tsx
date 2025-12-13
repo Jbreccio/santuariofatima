@@ -1,26 +1,20 @@
-import React, { useState, useEffect } from 'react';
+// pages/admin/PainelAdmin.tsx - VERSÃO FINAL CORRIGIDA PARA BETO
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  Upload, 
-  Image, 
-  MessageSquare, 
-  Calendar, 
-  AlertCircle,
-  LogOut,
-  Save,
-  Trash2,
-  Eye,
-  Home,
-  Bell,
-  Settings,
-  Type,
-  X,
-  Palette,
-  Plus,
-  FileText,
-  Download,
-  Globe
+  Upload, Image, MessageSquare, Calendar, AlertCircle,
+  LogOut, Save, Trash2, Eye, Home, Bell, Settings,
+  X, Palette, Plus, Download, Globe,
+  Clock, Edit2, Check, ChevronLeft, ChevronRight
 } from 'lucide-react';
+
+interface CarrosselHomeItem {
+  id: string;
+  imagem: string;
+  titulo?: string;
+  ordem: number;
+  ativo: boolean;
+}
 
 interface RecadoItem {
   id: string;
@@ -30,256 +24,513 @@ interface RecadoItem {
   imagem?: string;
   dataCriacao: string;
   ativo: boolean;
-  categoria?: string;
-  paginaDestino?: string;
+  urgente?: boolean;
 }
 
-interface EventoItem {
+interface EventoLiturgico {
   id: string;
-  titulo: string;
-  conteudo: string;
-  tipo: 'texto' | 'imagem' | 'carrossel';
-  imagem?: string;
-  data: string;
-  hora: string;
-  local: string;
-  dataCriacao: string;
+  periodo: string;
+  cor: 'verde' | 'branco' | 'vermelho' | 'roxo' | 'rosa' | 'amarelo';
+  tituloFaixa: string;
+  imagens: string[];
   ativo: boolean;
-  corBanner: string;
-  corBannerTo: string;
-  textoFaixa?: string;
-  paginaDestino: 'carrosselFotos' | 'momentosLiturgicos' | 'eventosEspeciais';
-}
-
-interface CarrosselHomeItem {
-  id: string;
-  imagem: string;
-  titulo?: string;
-  descricao?: string;
-  ordem: number;
-  ativo: boolean;
-  paginaDestino: 'carrosselFotos' | 'destaqueHome';
 }
 
 interface PopupItem {
   id: string;
-  titulo: string;
-  mensagem: string;
-  tipo: 'texto' | 'imagem';
-  imagem?: string;
+  imagem: string;
+  tempoExibicao: number;
   ativo: boolean;
-  intervalo: number;
+  ordem: number;
 }
+
+// ============ FUNÇÕES AUXILIARES ============
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = error => reject(error);
+  });
+};
+
+// Função para corrigir URLs de imagens — SÓ se for realmente necessário
+const corrigirUrlImagem = (url: string): string => {
+  if (!url) return '/images/default-image.png';
+  // Se já for uma URL válida (http, https, data:image ou caminho absoluto)
+  if (url.startsWith('http') || url.startsWith('data:image') || url.startsWith('/')) {
+    return url;
+  }
+  // Só adiciona /images/ se for um caminho relativo sem barra
+  return `/images/${url}`;
+};
 
 export default function PainelAdmin() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState<'carrossel-home' | 'recados' | 'eventos' | 'popups'>('carrossel-home');
+  const [activeTab, setActiveTab] = useState<'carrossel-home' | 'momentos-liturgicos' | 'popup' | 'recados'>('carrossel-home');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'published' | 'error'>('idle');
+  const [previewPopup, setPreviewPopup] = useState<PopupItem | null>(null);
+  const [editingPopupId, setEditingPopupId] = useState<string | null>(null);
 
-  // Estados
-  const [carrosselHome, setCarrosselHome] = useState<CarrosselHomeItem[]>([]);
+  // ============ ESTADOS DO SISTEMA ============
+  const [fotosCarrossel, setFotosCarrossel] = useState<CarrosselHomeItem[]>([
+    { id: 'altarcristo', imagem: '/images/carrosselFotos/altarcristo.png', titulo: 'Altar de Cristo', ordem: 0, ativo: true },
+    { id: 'altarlateral', imagem: '/images/carrosselFotos/altarlateral.png', titulo: 'Altar Lateral', ordem: 1, ativo: true },
+    { id: 'altarlaterall', imagem: '/images/carrosselFotos/altarlaterall.png', titulo: 'Altar Lateral Esquerdo', ordem: 2, ativo: true },
+    { id: 'cruzNovo', imagem: '/images/carrosselFotos/cruzNovo.png', titulo: 'Cruz Nova', ordem: 3, ativo: true },
+    { id: 'cruzNovo2', imagem: '/images/carrosselFotos/cruzNovo2.png', titulo: 'Cruz Nova 2', ordem: 4, ativo: true },
+    { id: 'rosto', imagem: '/images/carrosselFotos/Rosto.png', titulo: 'Rosto', ordem: 5, ativo: true },
+    { id: 'aerea', imagem: '/images/carrosselFotos/Aerea.png', titulo: 'Vista Aérea', ordem: 6, ativo: true },
+    { id: 'entradaNovo2', imagem: '/images/carrosselFotos/entradaNovo2.png', titulo: 'Entrada Nova 2', ordem: 7, ativo: true },
+    { id: 'entradaNovo', imagem: '/images/carrosselFotos/entradaNovo.png', titulo: 'Entrada Nova', ordem: 8, ativo: true },
+    { id: 'people', imagem: '/images/carrosselFotos/people.png', titulo: 'Pessoas', ordem: 9, ativo: true },
+    { id: 'fachada1', imagem: '/images/carrosselFotos/fachada1.png', titulo: 'Fachada 1', ordem: 10, ativo: true },
+    { id: 'fachada2', imagem: '/images/carrosselFotos/fachada2.png', titulo: 'Fachada 2', ordem: 11, ativo: true },
+    { id: 'terco', imagem: '/images/carrosselFotos/Terco.png', titulo: 'Terço', ordem: 12, ativo: true },
+    { id: 'comunhao', imagem: '/images/carrosselFotos/comunhao.png', titulo: 'Comunhão', ordem: 13, ativo: true },
+    { id: 'mesanino', imagem: '/images/carrosselFotos/mesanino.png', titulo: 'Mesanino', ordem: 14, ativo: true },
+    { id: 'bible', imagem: '/images/carrosselFotos/bible.png', titulo: 'Bíblia', ordem: 15, ativo: true }
+  ]);
+
+  // ✅ DADOS INICIAIS CORRIGIDOS — CAMINHOS DIRETOS NA RAIZ
+  const [eventosLiturgicos, setEventosLiturgicos] = useState<EventoLiturgico[]>([
+    {
+      id: 'cinzas-2025',
+      periodo: 'Cinzas',
+      cor: 'roxo',
+      tituloFaixa: 'CINZAS 2025',
+      imagens: ['/Cinzas1.png','/Cinzas02.png','/Cinzas03.png','/Cinzas4.png','/Cinzas5.png','/Cinzas6.png'],
+      ativo: true
+    },
+    {
+      id: 'jubileu-2025',
+      periodo: 'Jubileu',
+      cor: 'amarelo',
+      tituloFaixa: 'ANO JUBILAR 2025',
+      imagens: ['/Jubileo.png','/Jubileo2.png','/Jubileo3.png','/Jubileo4.png','/Jubileo5.png','/Jubileo6.png'],
+      ativo: true
+    },
+    {
+      id: 'ramos-2025',
+      periodo: 'Domingo de Ramos',
+      cor: 'vermelho',
+      tituloFaixa: 'DOMINGO DE RAMOS 2025',
+      imagens: ['/altarfrente.png','/snsf.png','/ramos01.png','/ramos02.png','/ramos03.png','/ramos04.png','/ramos05.png'],
+      ativo: true
+    }
+  ]);
+
+  const [popups, setPopups] = useState<PopupItem[]>([
+    { id: 'popup1', imagem: '/images/popup/popup001.png', tempoExibicao: 10, ativo: true, ordem: 0 },
+    { id: 'popup2', imagem: '/images/popup/popup002.png', tempoExibicao: 15, ativo: true, ordem: 1 },
+    { id: 'popup3', imagem: '/images/popup/popup003.png', tempoExibicao: 30, ativo: false, ordem: 2 },
+    { id: 'popup4', imagem: '/images/popup/popup004.png', tempoExibicao: 10, ativo: false, ordem: 3 }
+  ]);
+
   const [recados, setRecados] = useState<RecadoItem[]>([]);
-  const [eventos, setEventos] = useState<EventoItem[]>([]);
-  const [popups, setPopups] = useState<PopupItem[]>([]);
-  
-  // Formulários
+
+  // ============ FORMULÁRIOS ============
+  const [novoEventoLiturgico, setNovoEventoLiturgico] = useState<Omit<EventoLiturgico, 'id'>>({
+    periodo: '',
+    cor: 'roxo',
+    tituloFaixa: '',
+    imagens: [],
+    ativo: true
+  });
+
   const [novoRecado, setNovoRecado] = useState<Omit<RecadoItem, 'id' | 'dataCriacao'>>({
     titulo: '',
     conteudo: '',
     tipo: 'texto',
-    imagem: '',
     ativo: true,
-    categoria: 'geral',
-    paginaDestino: 'carrosselFotos'
-  });
-
-  const [novoEvento, setNovoEvento] = useState<Omit<EventoItem, 'id' | 'dataCriacao'>>({
-    titulo: '',
-    conteudo: '',
-    tipo: 'texto',
-    imagem: '',
-    data: '',
-    hora: '',
-    local: '',
-    ativo: true,
-    corBanner: '#9333ea', // Roxo padrão
-    corBannerTo: '#7c3aed', // Roxo mais escuro
-    textoFaixa: '',
-    paginaDestino: 'carrosselFotos'
+    urgente: false
   });
 
   const [novoPopup, setNovoPopup] = useState<Omit<PopupItem, 'id'>>({
-    titulo: '',
-    mensagem: '',
-    tipo: 'texto',
     imagem: '',
+    tempoExibicao: 10,
     ativo: true,
-    intervalo: 5
+    ordem: 0
   });
 
-  // Páginas de destino disponíveis
-  const paginasDestino = [
-    { id: 'carrosselFotos', nome: 'Carrossel Fotos (Principal)', descricao: 'Imagens no carrossel da página inicial' },
-    { id: 'momentosLiturgicos', nome: 'Momentos Litúrgicos', descricao: 'Eventos e celebrações litúrgicas' },
-    { id: 'eventosEspeciais', nome: 'Eventos Especiais', descricao: 'Batizados, casamentos, festas' },
-    { id: 'destaqueHome', nome: 'Destaque Home', descricao: 'Destaques na página inicial' }
+  const coresLiturgicas = [
+    { id: 'verde', nome: 'Verde (Tempo Comum)', descricao: 'Períodos ordinários' },
+    { id: 'branco', nome: 'Branco (Natal/Páscoa)', descricao: 'Celebrações festivas' },
+    { id: 'vermelho', nome: 'Vermelho (Paixão/Pentecostes)', descricao: 'Paixão, mártires e Espírito Santo' },
+    { id: 'roxo', nome: 'Roxo (Advento/Quaresma)', descricao: 'Preparação e penitência' },
+    { id: 'rosa', nome: 'Rosa (Gaudete/Laetare)', descricao: 'Domingos especiais' },
+    { id: 'amarelo', nome: 'Amarelo (Jubileu)', descricao: 'Celebrações jubilares' }
   ];
 
-  // Cores pré-definidas para banners
-  const coresBanner = [
-    { nome: 'Verde (Tempo Comum)', from: '#059669', to: '#047857', descricao: 'Períodos ordinários' },
-    { nome: 'Roxo (Advento/Quaresma)', from: '#9333ea', to: '#7c3aed', descricao: 'Tempos de preparação' },
-    { nome: 'Branco (Natal/Páscoa)', from: '#ffffff', to: '#f3f4f6', descricao: 'Celebrações festivas' },
-    { nome: 'Vermelho (Paixão/Mártires)', from: '#dc2626', to: '#b91c1c', descricao: 'Paixão de Cristo' },
-    { nome: 'Rosa (Gaudete/Laetare)', from: '#db2777', to: '#be185d', descricao: 'Domingos especiais' },
-    { nome: 'Azul (Marianos)', from: '#2563eb', to: '#1d4ed8', descricao: 'Festa de Nossa Senhora' },
-    { nome: 'Amarelo (Jubileu)', from: '#f59e0b', to: '#d97706', descricao: 'Aniversários especiais' },
-    { nome: 'Cinza (Finados)', from: '#6b7280', to: '#4b5563', descricao: 'Falecimentos' }
+  const temposExibicao = [
+    { segundos: 10, label: '10 segundos' },
+    { segundos: 15, label: '15 segundos' },
+    { segundos: 30, label: '30 segundos' }
   ];
+
+  // ============ EFFECTS ============
+  useEffect(() => {
+    document.body.style.overflowX = 'hidden';
+    return () => {
+      document.body.style.overflowX = '';
+    };
+  }, []);
 
   // Autenticação
   useEffect(() => {
     const checkAuth = () => {
       const token = localStorage.getItem('admin_token');
       const user = localStorage.getItem('admin_user');
-      
       if (!token || !user) {
-        navigate('/');
+        navigate('/loginsecret');
         return false;
       }
-      
       setIsAuthenticated(true);
       setLoading(false);
       return true;
     };
-
     setTimeout(() => checkAuth(), 500);
   }, [navigate]);
 
-  // Carregar dados do localStorage
+  // Carregar dados
   useEffect(() => {
     if (isAuthenticated) {
       const carregarDados = () => {
-        const dados = localStorage.getItem('recados-santuario');
-        if (dados) {
-          try {
-            const parsed = JSON.parse(dados);
-            
-            // Separar por tipo
-            const carrosselItems = parsed.filter((item: any) => item.tipo === 'carrossel-home');
-            const recadosItems = parsed.filter((item: any) => item.tipo === 'recado');
-            const eventosItems = parsed.filter((item: any) => item.tipo === 'evento');
-            const popupsItems = parsed.filter((item: any) => item.tipo === 'popup');
-            
-            setCarrosselHome(carrosselItems);
-            setRecados(recadosItems);
-            setEventos(eventosItems);
-            setPopups(popupsItems);
-          } catch (error) {
-            console.error('Erro ao carregar dados:', error);
+        try {
+          const dadosNovos = localStorage.getItem('santuario-dados');
+          if (dadosNovos) {
+            const parsed = JSON.parse(dadosNovos);
+            if (parsed.carrossel?.length) {
+              setFotosCarrossel(parsed.carrossel);
+            }
+            if (parsed.momentosLiturgicos?.length) {
+              setEventosLiturgicos(parsed.momentosLiturgicos);
+            }
+            if (parsed.popups?.length) {
+              setPopups(parsed.popups);
+            }
+            if (parsed.recados?.length) {
+              setRecados(parsed.recados);
+            }
           }
+          const dadosAntigos = localStorage.getItem('recados-santuario');
+          if (dadosAntigos && recados.length === 0) {
+            const parsedAntigos = JSON.parse(dadosAntigos);
+            const recadosItems = parsedAntigos.filter((item: any) => item.tipo === 'recado');
+            setRecados(recadosItems);
+          }
+        } catch (error) {
+          console.error('❌ Erro ao carregar dados:', error);
         }
       };
-      
       carregarDados();
     }
   }, [isAuthenticated]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    navigate('/');
-  };
+  // ============ FUNÇÕES PRINCIPAIS ============
+  const salvarDadosNoLocalStorage = useCallback(() => {
+    console.log('💾 Salvando dados...');
+    const dadosParaSalvar = {
+      carrossel: fotosCarrossel,
+      momentosLiturgicos: eventosLiturgicos,
+      popups: popups,
+      recados: recados,
+      ultimaAtualizacao: new Date().toISOString()
+    };
+    localStorage.setItem('santuario-dados', JSON.stringify(dadosParaSalvar));
+    if (recados.length > 0) {
+      const recadosParaSalvar = recados.map(item => ({ ...item, tipo: 'recado' as const }));
+      localStorage.setItem('recados-santuario', JSON.stringify(recadosParaSalvar));
+    }
+  }, [fotosCarrossel, eventosLiturgicos, popups, recados]);
 
-  // Função para salvar e publicar dados
   const salvarEPublicar = () => {
+    const popupsAtivos = popups.filter(p => p.ativo);
+    if (popupsAtivos.length === 0) {
+      if (!window.confirm('⚠️ Nenhum popup está ativo. O site mostrará "Bem-vindo" como padrão.\nDeseja continuar?')) {
+        return;
+      }
+    }
     setSaveStatus('saving');
-    
     try {
-      const todosDados = [
-        ...carrosselHome.map(item => ({ ...item, tipo: 'carrossel-home' as const })),
-        ...recados.map(item => ({ ...item, tipo: 'recado' as const })),
-        ...eventos.map(item => ({ ...item, tipo: 'evento' as const })),
-        ...popups.map(item => ({ ...item, tipo: 'popup' as const }))
-      ];
-      
-      localStorage.setItem('recados-santuario', JSON.stringify(todosDados));
-      
-      // Simular publicação
+      localStorage.removeItem('popupFechadoHoje');
+      salvarDadosNoLocalStorage();
+      window.dispatchEvent(new CustomEvent('dadosAtualizados', {
+        detail: { 
+          timestamp: new Date().toISOString(),
+          origem: 'PainelAdmin'
+        }
+      }));
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'santuario-dados',
+        newValue: localStorage.getItem('santuario-dados')
+      }));
       setTimeout(() => {
         setSaveStatus('published');
+        console.log('🎉 Dados publicados com sucesso!');
         setTimeout(() => setSaveStatus('idle'), 3000);
       }, 1000);
-      
     } catch (error) {
-      console.error('Erro ao salvar:', error);
+      console.error('❌ ERRO AO SALVAR:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
   };
 
-  // === CARROSSEL HOME ===
-  const handleUploadFotoCarrossel = (e: React.ChangeEvent<HTMLInputElement>, pagina: string) => {
+  const handleLogout = () => {
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_user');
+    navigate('/loginsecret');
+  };
+
+  const handleExportarDados = () => {
+    const dados = {
+      santuarioDados: {
+        carrossel: fotosCarrossel,
+        momentosLiturgicos: eventosLiturgicos,
+        popups: popups,
+        recados: recados
+      },
+      exportadoEm: new Date().toISOString(),
+      versao: '2.1'
+    };
+    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `santuario-dados-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    alert('📥 Dados exportados com sucesso!');
+  };
+
+  const handleImportarDados = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const dados = JSON.parse(event.target?.result as string);
+        if (dados.santuarioDados) {
+          if (window.confirm('Importar dados? Isso substituirá os dados atuais.')) {
+            setFotosCarrossel(dados.santuarioDados.carrossel || []);
+            setEventosLiturgicos(dados.santuarioDados.momentosLiturgicos || []);
+            setPopups(dados.santuarioDados.popups || []);
+            setRecados(dados.santuarioDados.recados || []);
+            alert('✅ Dados importados com sucesso! Clique em "Salvar & Publicar".');
+          }
+        } else {
+          alert('❌ Formato de arquivo inválido');
+        }
+      } catch (error) {
+        alert('❌ Erro ao importar dados: ' + error);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  // ============ CARROSSEL ============
+  const handleUploadFotoCarrossel = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files) {
-      const novasFotos: CarrosselHomeItem[] = Array.from(files).map((file, index) => ({
-        id: Date.now() + index + '',
-        imagem: URL.createObjectURL(file),
-        titulo: `Imagem ${carrosselHome.length + index + 1}`,
-        ordem: carrosselHome.length + index,
-        ativo: true,
-        paginaDestino: pagina as 'carrosselFotos' | 'destaqueHome'
-      }));
-      
-      setCarrosselHome([...carrosselHome, ...novasFotos]);
+      const novasFotosPromises = Array.from(files).map(async (file, index) => {
+        const base64 = await fileToBase64(file);
+        return {
+          id: Date.now() + index + '',
+          imagem: base64,
+          titulo: `Nova Imagem ${fotosCarrossel.length + index + 1}`,
+          ordem: fotosCarrossel.length + index,
+          ativo: true
+        };
+      });
+      const novasFotos = await Promise.all(novasFotosPromises);
+      setFotosCarrossel(prev => [...prev, ...novasFotos]);
+      alert(`✅ ${novasFotos.length} imagem(ns) adicionada(s)!`);
     }
   };
 
   const handleDeleteFotoCarrossel = (id: string) => {
     if (window.confirm('Excluir esta imagem?')) {
-      setCarrosselHome(carrosselHome.filter(item => item.id !== id));
+      setFotosCarrossel(fotosCarrossel.filter(item => item.id !== id));
     }
   };
 
   const handleToggleAtivoCarrossel = (id: string) => {
-    setCarrosselHome(carrosselHome.map(item => 
+    setFotosCarrossel(fotosCarrossel.map(item => 
       item.id === id ? { ...item, ativo: !item.ativo } : item
     ));
   };
 
-  // === RECADOS ===
+  const handleReorderCarrossel = (fromIndex: number, toIndex: number) => {
+    const newItems = [...fotosCarrossel];
+    const [removed] = newItems.splice(fromIndex, 1);
+    newItems.splice(toIndex, 0, removed);
+    setFotosCarrossel(newItems.map((item, idx) => ({ ...item, ordem: idx })));
+  };
+
+  // ============ MOMENTOS LITÚRGICOS ============
+  const handleAddEventoLiturgico = () => {
+    if (!novoEventoLiturgico.periodo.trim() || !novoEventoLiturgico.tituloFaixa.trim()) {
+      alert('Preencha o período e o título da faixa!');
+      return;
+    }
+    const novoEvento: EventoLiturgico = {
+      id: Date.now() + '',
+      ...novoEventoLiturgico
+    };
+    setEventosLiturgicos([...eventosLiturgicos, novoEvento]);
+    setNovoEventoLiturgico({
+      periodo: '',
+      cor: 'roxo',
+      tituloFaixa: '',
+      imagens: [],
+      ativo: true
+    });
+  };
+
+  const handleDeleteEventoLiturgico = (id: string) => {
+    if (window.confirm('Excluir este período litúrgico?')) {
+      setEventosLiturgicos(eventosLiturgicos.filter(item => item.id !== id));
+    }
+  };
+
+  const handleToggleAtivoEvento = (id: string) => {
+    setEventosLiturgicos(eventosLiturgicos.map(item => 
+      item.id === id ? { ...item, ativo: !item.ativo } : item
+    ));
+  };
+
+  const handleAddImagemEvento = async (eventoId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const novasImagensPromises = Array.from(files).map(async (file) => {
+        return await fileToBase64(file);
+      });
+      const novasImagens = await Promise.all(novasImagensPromises);
+      setEventosLiturgicos(eventosLiturgicos.map(evento => 
+        evento.id === eventoId 
+          ? { ...evento, imagens: [...evento.imagens, ...novasImagens] }
+          : evento
+      ));
+      alert(`✅ ${novasImagens.length} imagem(ns) adicionada(s) ao evento!`);
+    }
+  };
+
+  const handleDeleteImagemEvento = (eventoId: string, imagemIndex: number) => {
+    setEventosLiturgicos(eventosLiturgicos.map(evento => 
+      evento.id === eventoId 
+        ? { ...evento, imagens: evento.imagens.filter((_, idx) => idx !== imagemIndex) }
+        : evento
+    ));
+  };
+
+  // ============ POPUP ============
+  const handleUploadPopupImagem = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const novosPopupsPromises = Array.from(files).map(async (file, index) => {
+        const base64 = await fileToBase64(file);
+        return {
+          id: Date.now() + index + '',
+          imagem: base64,
+          tempoExibicao: 10,
+          ativo: true,
+          ordem: popups.length + index
+        };
+      });
+      const novosPopups = await Promise.all(novosPopupsPromises);
+      setPopups(prev => [...prev, ...novosPopups]);
+      alert(`✅ ${novosPopups.length} popup(s) adicionado(s)!`);
+    }
+  };
+
+  const handleAddPopupFromUrl = () => {
+    const url = prompt('Digite a URL da imagem para o popup:');
+    if (url && url.trim()) {
+      const novoPopupItem: PopupItem = {
+        id: Date.now() + '',
+        imagem: url.trim(), // ✅ Não corrige se já for URL válida
+        tempoExibicao: 10,
+        ativo: true,
+        ordem: popups.length
+      };
+      setPopups([...popups, novoPopupItem]);
+      alert('✅ Popup adicionado com sucesso!');
+    }
+  };
+
+  const handleDeletePopup = (id: string) => {
+    if (window.confirm('Excluir este popup?')) {
+      setPopups(popups.filter(p => p.id !== id));
+    }
+  };
+
+  const handleToggleAtivoPopup = (id: string) => {
+    setPopups(popups.map(p => 
+      p.id === id ? { ...p, ativo: !p.ativo } : p
+    ));
+  };
+
+  const handleTempoExibicaoPopup = (id: string, tempo: number) => {
+    setPopups(popups.map(p => 
+      p.id === id ? { ...p, tempoExibicao: tempo } : p
+    ));
+  };
+
+  const handleReorderPopup = (id: string, direction: 'up' | 'down') => {
+    const index = popups.findIndex(p => p.id === id);
+    if ((direction === 'up' && index === 0) || (direction === 'down' && index === popups.length - 1)) return;
+    const newPopups = [...popups];
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    [newPopups[index], newPopups[newIndex]] = [newPopups[newIndex], newPopups[index]];
+    setPopups(newPopups.map((item, idx) => ({ ...item, ordem: idx })));
+  };
+
+  const handlePreviewPopup = (popup: PopupItem) => {
+    setPreviewPopup(popup);
+  };
+
+  const handleEditPopup = (id: string) => {
+    setEditingPopupId(id === editingPopupId ? null : id);
+  };
+
+  const handleSavePopupEdit = (id: string, field: keyof PopupItem, value: any) => {
+    setPopups(popups.map(p => 
+      p.id === id ? { ...p, [field]: value } : p
+    ));
+  };
+
+  // ============ RECADOS ============
   const handleAddRecado = () => {
+    if (!novoRecado.titulo.trim() || !novoRecado.conteudo.trim()) {
+      alert('Preencha o título e o conteúdo do recado!');
+      return;
+    }
     const novoItem: RecadoItem = {
       id: Date.now() + '',
       ...novoRecado,
-      dataCriacao: new Date().toLocaleDateString('pt-BR')
+      tipo: 'texto',
+      dataCriacao: new Date().toLocaleDateString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      }),
+      ativo: true
     };
-
     setRecados([...recados, novoItem]);
-    
-    // Limpar formulário
     setNovoRecado({
       titulo: '',
       conteudo: '',
       tipo: 'texto',
-      imagem: '',
       ativo: true,
-      categoria: 'geral',
-      paginaDestino: 'carrosselFotos'
+      urgente: false
     });
-  };
-
-  const handleRecadoUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNovoRecado({ ...novoRecado, imagem: URL.createObjectURL(file) });
-    }
-  };
-
-  const handleDeleteRecadoImagem = () => {
-    setNovoRecado({ ...novoRecado, imagem: '' });
   };
 
   const handleDeleteRecado = (id: string) => {
@@ -294,123 +545,13 @@ export default function PainelAdmin() {
     ));
   };
 
-  // === EVENTOS ===
-  const handleAddEvento = () => {
-    const novoItem: EventoItem = {
-      id: Date.now() + '',
-      ...novoEvento,
-      dataCriacao: new Date().toLocaleDateString('pt-BR')
-    };
-
-    setEventos([...eventos, novoItem]);
-    
-    // Limpar formulário
-    setNovoEvento({
-      titulo: '',
-      conteudo: '',
-      tipo: 'texto',
-      imagem: '',
-      data: '',
-      hora: '',
-      local: '',
-      ativo: true,
-      corBanner: '#9333ea',
-      corBannerTo: '#7c3aed',
-      textoFaixa: '',
-      paginaDestino: 'carrosselFotos'
-    });
-  };
-
-  const handleEventoUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNovoEvento({ ...novoEvento, imagem: URL.createObjectURL(file) });
-    }
-  };
-
-  const handleDeleteEventoImagem = () => {
-    setNovoEvento({ ...novoEvento, imagem: '' });
-  };
-
-  const handleDeleteEvento = (id: string) => {
-    if (window.confirm('Excluir este evento?')) {
-      setEventos(eventos.filter(item => item.id !== id));
-    }
-  };
-
-  const handleToggleAtivoEvento = (id: string) => {
-    setEventos(eventos.map(item => 
-      item.id === id ? { ...item, ativo: !item.ativo } : item
+  const handleToggleUrgenteRecado = (id: string) => {
+    setRecados(recados.map(item => 
+      item.id === id ? { ...item, urgente: !item.urgente } : item
     ));
   };
 
-  // === POPUP ===
-  const handleAddPopup = () => {
-    const novoItem: PopupItem = {
-      id: Date.now() + '',
-      ...novoPopup
-    };
-
-    setPopups([...popups, novoItem]);
-    
-    // Limpar formulário
-    setNovoPopup({
-      titulo: '',
-      mensagem: '',
-      tipo: 'texto',
-      imagem: '',
-      ativo: true,
-      intervalo: 5
-    });
-  };
-
-  const handlePopupUploadImagem = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setNovoPopup({ ...novoPopup, imagem: URL.createObjectURL(file) });
-    }
-  };
-
-  const handleDeletePopupImagem = () => {
-    setNovoPopup({ ...novoPopup, imagem: '' });
-  };
-
-  const handleDeletePopup = (id: string) => {
-    if (window.confirm('Excluir este popup?')) {
-      setPopups(popups.filter(item => item.id !== id));
-    }
-  };
-
-  const handleToggleAtivoPopup = (id: string) => {
-    setPopups(popups.map(item => 
-      item.id === id ? { ...item, ativo: !item.ativo } : item
-    ));
-  };
-
-  // Exportar dados
-  const handleExportarDados = () => {
-    const dados = {
-      carrosselHome,
-      recados,
-      eventos,
-      popups,
-      exportadoEm: new Date().toISOString()
-    };
-    
-    const blob = new Blob([JSON.stringify(dados, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `dados-santuario-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    
-    alert('📥 Dados exportados com sucesso!');
-  };
-
-  // Loading
+  // ============ RENDERIZAÇÃO ============
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -421,25 +562,23 @@ export default function PainelAdmin() {
       </div>
     );
   }
-
   if (!isAuthenticated) return null;
 
   return (
     <div 
-      className="min-h-screen bg-gray-50 relative"
+      className="min-h-screen bg-gray-50 relative overflow-x-hidden"
       style={{
         backgroundImage: "url('/images/carrosselFotos/fachada1.png')",
         backgroundPosition: 'right top',
         backgroundRepeat: 'no-repeat',
-        backgroundSize: 'auto 80vh',
+        backgroundSize: '100% auto',
         backgroundAttachment: 'fixed',
-        backgroundBlendMode: 'overlay'
+        imageRendering: 'crisp-edges',
+        WebkitFontSmoothing: 'antialiased',
       }}
     >
-      {/* Overlay suave */}
-      <div className="absolute inset-0 bg-white/85 z-0"></div>
-
-      {/* Cabeçalho */}
+      <div className="absolute inset-0 bg-white/35 z-0"></div>
+      
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -448,41 +587,47 @@ export default function PainelAdmin() {
                 <Settings className="text-white" size={22} />
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Painel Administrativo</h1>
-                <p className="text-xs text-gray-600">Santuário de Fátima</p>
+                <h1 className="text-xl font-bold text-gray-900">Sistema Administrativo do Santuário</h1>
+                <p className="text-xs text-gray-600">Desenvolvido com fé e dedicação</p>
               </div>
             </div>
-            
             <div className="flex items-center gap-3">
-              {/* Status de publicação */}
+              <div className="hidden sm:flex items-center gap-2">
+                <label className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer">
+                  <Upload size={18} />
+                  <span>Importar</span>
+                  <input 
+                    type="file" 
+                    accept=".json" 
+                    onChange={handleImportarDados}
+                    className="hidden"
+                  />
+                </label>
+                <button
+                  onClick={handleExportarDados}
+                  className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Exportar dados"
+                >
+                  <Download size={18} />
+                  <span>Exportar</span>
+                </button>
+              </div>
               {saveStatus === 'saving' && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-blue-100 text-blue-700 rounded-lg">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-700"></div>
                   <span className="text-sm">Salvando...</span>
                 </div>
               )}
-              
               {saveStatus === 'published' && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-green-100 text-green-700 rounded-lg">
                   <span className="text-sm">✅ Publicado com sucesso!</span>
                 </div>
               )}
-              
               {saveStatus === 'error' && (
                 <div className="flex items-center gap-2 px-3 py-2 bg-red-100 text-red-700 rounded-lg">
                   <span className="text-sm">❌ Erro ao salvar</span>
                 </div>
               )}
-
-              <button
-                onClick={handleExportarDados}
-                className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
-                title="Exportar dados"
-              >
-                <Download size={18} />
-                <span className="hidden sm:inline">Exportar</span>
-              </button>
-              
               <button
                 onClick={salvarEPublicar}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow"
@@ -490,7 +635,6 @@ export default function PainelAdmin() {
                 <Globe size={18} />
                 <span>Salvar & Publicar</span>
               </button>
-              
               <button
                 onClick={() => navigate('/')}
                 className="flex items-center gap-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -498,7 +642,6 @@ export default function PainelAdmin() {
                 <Home size={18} />
                 <span className="hidden sm:inline">Site</span>
               </button>
-              
               <button
                 onClick={handleLogout}
                 className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
@@ -512,14 +655,13 @@ export default function PainelAdmin() {
       </header>
 
       <main className="container mx-auto px-4 py-6 relative z-10">
-        {/* Cards de Estatísticas */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
           <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Carrossel Fotos</p>
+                <p className="text-sm text-gray-500">Carrossel Home</p>
                 <p className="text-2xl font-bold text-gray-800 mt-1">
-                  {carrosselHome.filter(item => item.paginaDestino === 'carrosselFotos' && item.ativo).length}
+                  {fotosCarrossel.filter(item => item.ativo).length}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Imagens ativas</p>
               </div>
@@ -528,43 +670,26 @@ export default function PainelAdmin() {
               </div>
             </div>
           </div>
-          
           <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-500">Recados Ativos</p>
+                <p className="text-sm text-gray-500">Momentos Litúrgicos</p>
                 <p className="text-2xl font-bold text-gray-800 mt-1">
-                  {recados.filter(item => item.ativo).length}
+                  {eventosLiturgicos.filter(item => item.ativo).length}
                 </p>
-                <p className="text-xs text-gray-500 mt-1">Urgências e avisos</p>
-              </div>
-              <div className="p-3 bg-green-100 rounded-lg">
-                <MessageSquare className="text-green-600" size={24} />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-500">Eventos Litúrgicos</p>
-                <p className="text-2xl font-bold text-gray-800 mt-1">
-                  {eventos.filter(item => item.paginaDestino === 'momentosLiturgicos' && item.ativo).length}
-                </p>
-                <p className="text-xs text-gray-500 mt-1">Celebrações ativas</p>
+                <p className="text-xs text-gray-500 mt-1">Períodos ativos</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-lg">
                 <Calendar className="text-purple-600" size={24} />
               </div>
             </div>
           </div>
-          
           <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500">Popups Ativos</p>
                 <p className="text-2xl font-bold text-gray-800 mt-1">
-                  {popups.filter(item => item.ativo).length}
+                  {popups.filter(p => p.ativo).length}
                 </p>
                 <p className="text-xs text-gray-500 mt-1">Avisos no site</p>
               </div>
@@ -573,16 +698,29 @@ export default function PainelAdmin() {
               </div>
             </div>
           </div>
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-5 border border-gray-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-500">Recados</p>
+                <p className="text-2xl font-bold text-gray-800 mt-1">
+                  {recados.filter(item => item.ativo).length}
+                </p>
+                <p className="text-xs text-gray-500 mt-1">Avisos importantes</p>
+              </div>
+              <div className="p-3 bg-red-100 rounded-lg">
+                <AlertCircle className="text-red-600" size={24} />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Abas */}
         <div className="mb-6 overflow-x-auto">
           <div className="flex gap-2 pb-2 min-w-max">
             {([
               { id: 'carrossel-home', label: 'Carrossel Fotos', icon: Image },
-              { id: 'recados', label: 'Recados', icon: MessageSquare },
-              { id: 'eventos', label: 'Eventos', icon: Calendar },
-              { id: 'popups', label: 'Popups', icon: AlertCircle }
+              { id: 'momentos-liturgicos', label: 'Momentos Litúrgicos', icon: Calendar },
+              { id: 'popup', label: 'Popup', icon: Bell },
+              { id: 'recados', label: 'Recados', icon: AlertCircle }
             ] as const).map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
@@ -602,130 +740,460 @@ export default function PainelAdmin() {
           </div>
         </div>
 
-        {/* Conteúdo da Aba */}
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
-          
           {/* CARROSSEL FOTOS */}
           {activeTab === 'carrossel-home' && (
             <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Carrossel de Fotos</h2>
-              <p className="text-gray-600 mb-4 text-sm">Adicione imagens para diferentes seções do site</p>
-              
-              {/* Seletor de Página */}
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Carrossel da Home</h2>
+              <p className="text-gray-600 mb-4 text-sm">Total de {fotosCarrossel.length} imagens ({fotosCarrossel.filter(f => f.ativo).length} ativas)</p>
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-3">Selecione onde a imagem aparecerá:</label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {paginasDestino.filter(p => p.id === 'carrosselFotos' || p.id === 'destaqueHome').map((pagina) => (
-                    <div 
-                      key={pagina.id}
-                      className={`border rounded-lg p-4 cursor-pointer transition-all ${
-                        novoRecado.paginaDestino === pagina.id ? 'border-blue-500 bg-blue-50' : 'border-gray-300 hover:border-gray-400'
-                      }`}
-                      onClick={() => setNovoRecado({...novoRecado, paginaDestino: pagina.id})}
-                    >
-                      <h3 className="font-bold text-gray-800">{pagina.nome}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{pagina.descricao}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Upload para página selecionada */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Adicionar Imagens para: {
-                    paginasDestino.find(p => p.id === novoRecado.paginaDestino)?.nome || 'Carrossel Fotos'
-                  }
-                </label>
                 <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-500 transition-colors bg-white/50">
                   <Upload className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-                  <p className="text-sm text-gray-600 mb-2">Selecione imagens para esta seção (JPG/PNG)</p>
-                  <p className="text-xs text-gray-500 mb-3">Tamanho recomendado: 1920x800px</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    As novas imagens serão ADICIONADAS às {fotosCarrossel.length} existentes
+                  </p>
                   <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm cursor-pointer hover:bg-blue-700 transition-colors">
                     <Plus size={16} />
-                    Escolher Imagens para {
-                      paginasDestino.find(p => p.id === novoRecado.paginaDestino)?.nome || 'Carrossel Fotos'
-                    }
+                    Adicionar Mais Imagens ({fotosCarrossel.length} já existem)
                     <input 
                       type="file" 
                       multiple 
                       accept="image/*" 
-                      onChange={(e) => handleUploadFotoCarrossel(e, novoRecado.paginaDestino || 'carrosselFotos')} 
+                      onChange={handleUploadFotoCarrossel} 
                       className="hidden" 
                     />
                   </label>
                 </div>
               </div>
-
-              {/* Galeria por página */}
-              {['carrosselFotos', 'destaqueHome'].map((paginaId) => {
-                const imagensPagina = carrosselHome.filter(item => item.paginaDestino === paginaId);
-                const paginaNome = paginasDestino.find(p => p.id === paginaId)?.nome;
-                
-                if (imagensPagina.length === 0) return null;
-                
-                return (
-                  <div key={paginaId} className="mb-8">
-                    <h3 className="font-bold text-gray-700 mb-4 text-lg">{paginaNome}</h3>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-                      {imagensPagina.map((item) => (
-                        <div key={item.id} className="border rounded-lg overflow-hidden bg-white">
-                          <div className="relative">
-                            <img 
-                              src={item.imagem} 
-                              alt={item.titulo} 
-                              className="w-full h-40 object-cover"
-                            />
-                            <div className="absolute top-2 right-2 flex gap-1">
-                              <button 
-                                onClick={() => handleToggleAtivoCarrossel(item.id)}
-                                className={`p-1 rounded-full ${item.ativo ? 'bg-green-500' : 'bg-red-500'}`}
-                                title={item.ativo ? 'Desativar' : 'Ativar'}
-                              >
-                                <Eye size={12} className="text-white" />
-                              </button>
-                              <button 
-                                onClick={() => handleDeleteFotoCarrossel(item.id)}
-                                className="p-1 bg-red-500 rounded-full"
-                                title="Excluir"
-                              >
-                                <Trash2 size={12} className="text-white" />
-                              </button>
-                            </div>
-                          </div>
-                          <div className="p-3">
-                            <input
-                              type="text"
-                              value={item.titulo}
-                              onChange={(e) => {
-                                setCarrosselHome(carrosselHome.map(i => 
-                                  i.id === item.id ? { ...i, titulo: e.target.value } : i
-                                ));
-                              }}
-                              className="w-full text-sm border rounded px-2 py-1 mb-1"
-                              placeholder="Título da imagem"
-                            />
-                            <div className="flex justify-between items-center text-xs text-gray-500">
-                              <span>Ordem: {item.ordem + 1}</span>
-                              <span className={item.ativo ? 'text-green-600' : 'text-red-600'}>
-                                {item.ativo ? 'Ativo' : 'Inativo'}
-                              </span>
-                            </div>
-                          </div>
+              {fotosCarrossel.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <Image className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>Nenhuma imagem no carrossel</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+                  {fotosCarrossel.map((item, index) => (
+                    <div key={item.id} className="border rounded-lg overflow-hidden bg-white group">
+                      <div className="relative">
+                        <img 
+                          src={item.imagem} 
+                          alt={item.titulo} 
+                          className="w-full h-40 object-cover bg-gray-100"
+                          onError={(e) => {
+                            // ✅ Só corrige se NÃO for Base64 e NÃO começar com /
+                            if (!item.imagem.startsWith('data:image') && !item.imagem.startsWith('/')) {
+                              const corrigida = corrigirUrlImagem(item.imagem);
+                              (e.target as HTMLImageElement).src = corrigida;
+                            }
+                          }}
+                        />
+                        <div className="absolute top-2 right-2 flex gap-1">
+                          <button 
+                            onClick={() => handleToggleAtivoCarrossel(item.id)}
+                            className={`p-1 rounded-full ${item.ativo ? 'bg-green-500' : 'bg-red-500'}`}
+                            title={item.ativo ? 'Desativar' : 'Ativar'}
+                          >
+                            <Eye size={12} className="text-white" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteFotoCarrossel(item.id)}
+                            className="p-1 bg-red-500 rounded-full"
+                            title="Excluir"
+                          >
+                            <Trash2 size={12} className="text-white" />
+                          </button>
                         </div>
+                        <div className="absolute bottom-2 left-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {index > 0 && (
+                            <button 
+                              onClick={() => handleReorderCarrossel(index, index - 1)}
+                              className="p-1 bg-blue-600 rounded text-white"
+                              title="Mover para cima"
+                            >
+                              <ChevronLeft size={10} />
+                            </button>
+                          )}
+                          {index < fotosCarrossel.length - 1 && (
+                            <button 
+                              onClick={() => handleReorderCarrossel(index, index + 1)}
+                              className="p-1 bg-blue-600 rounded text-white"
+                              title="Mover para baixo"
+                            >
+                              <ChevronRight size={10} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      <div className="p-3">
+                        <input
+                          type="text"
+                          value={item.titulo || ''}
+                          onChange={(e) => {
+                            setFotosCarrossel(fotosCarrossel.map(i => 
+                              i.id === item.id ? { ...i, titulo: e.target.value } : i
+                            ));
+                          }}
+                          className="w-full text-sm border rounded px-2 py-1 mb-1"
+                          placeholder="Título da imagem"
+                        />
+                        <div className="flex justify-between items-center text-xs text-gray-500">
+                          <span>Posição: {item.ordem + 1}</span>
+                          <span className={item.ativo ? 'text-green-600' : 'text-red-600'}>
+                            {item.ativo ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* MOMENTOS LITÚRGICOS — CORRIGIDO */}
+          {activeTab === 'momentos-liturgicos' && (
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Momentos Litúrgicos</h2>
+              <p className="text-gray-600 mb-4 text-sm">Configure os períodos litúrgicos e suas cores</p>
+              <div className="bg-gray-50/50 rounded-lg p-4 mb-6">
+                <h3 className="font-bold text-gray-700 mb-3">Novo Momento Litúrgico</h3>
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={novoEventoLiturgico.periodo}
+                    onChange={(e) => setNovoEventoLiturgico({ ...novoEventoLiturgico, periodo: e.target.value })}
+                    placeholder="Período (ex: Quaresma, Advento, Natal)"
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                  />
+                  <input
+                    type="text"
+                    value={novoEventoLiturgico.tituloFaixa}
+                    onChange={(e) => setNovoEventoLiturgico({ ...novoEventoLiturgico, tituloFaixa: e.target.value })}
+                    placeholder="Título da faixa (ex: QUARESMA 2025)"
+                    className="w-full p-3 border border-gray-300 rounded-lg"
+                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Cor Litúrgica</label>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                      {coresLiturgicas.map((cor) => (
+                        <button
+                          key={cor.id}
+                          onClick={() => setNovoEventoLiturgico({ ...novoEventoLiturgico, cor: cor.id as any })}
+                          className={`flex flex-col items-center gap-2 p-3 rounded-lg border ${
+                            novoEventoLiturgico.cor === cor.id 
+                              ? 'ring-2 ring-blue-500 border-blue-300' 
+                              : 'border-gray-300 hover:border-gray-400'
+                          }`}
+                          title={cor.descricao}
+                        >
+                          <div 
+                            className={`w-full h-3 rounded ${
+                              cor.id === 'verde' ? 'bg-green-600' :
+                              cor.id === 'branco' ? 'bg-gray-200 border border-gray-300' :
+                              cor.id === 'vermelho' ? 'bg-red-600' :
+                              cor.id === 'roxo' ? 'bg-purple-600' :
+                              cor.id === 'rosa' ? 'bg-pink-500' :
+                              'bg-yellow-500'
+                            }`}
+                          />
+                          <span className="text-xs font-medium text-center">{cor.nome}</span>
+                        </button>
                       ))}
                     </div>
                   </div>
-                );
-              })}
-              
-              {carrosselHome.length === 0 && (
-                <div className="text-center py-10 text-gray-500">
-                  <Image className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>Nenhuma imagem cadastrada</p>
-                  <p className="text-sm mt-1">Selecione uma página e adicione imagens</p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleAddEventoLiturgico}
+                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                    >
+                      <div className="flex items-center justify-center gap-2">
+                        <Plus size={18} />
+                        Adicionar Momento Litúrgico
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <h3 className="font-bold text-gray-700 mb-3">Momentos Litúrgicos ({eventosLiturgicos.length})</h3>
+              {eventosLiturgicos.length === 0 ? (
+                <p className="text-gray-500 text-center py-6">Nenhum momento cadastrado</p>
+              ) : (
+                <div className="space-y-6">
+                  {eventosLiturgicos.map((evento) => (
+                    <div key={evento.id} className="border rounded-lg p-4 hover:border-blue-300 bg-white/50">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-bold text-gray-800">{evento.periodo}</h4>
+                          <p className="text-sm text-gray-600">{evento.tituloFaixa}</p>
+                          <div className="flex items-center gap-3 mt-1">
+                            <span className={`text-xs px-2 py-1 rounded-full ${evento.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                              {evento.ativo ? 'Ativo' : 'Inativo'}
+                            </span>
+                            <span className={`text-xs px-2 py-1 rounded-full ${
+                              evento.cor === 'verde' ? 'bg-green-100 text-green-800' :
+                              evento.cor === 'branco' ? 'bg-gray-100 text-gray-800' :
+                              evento.cor === 'vermelho' ? 'bg-red-100 text-red-800' :
+                              evento.cor === 'roxo' ? 'bg-purple-100 text-purple-800' :
+                              evento.cor === 'rosa' ? 'bg-pink-100 text-pink-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                              Cor: {evento.cor}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {evento.imagens.length} imagem(ns)
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleToggleAtivoEvento(evento.id)}
+                            className={`p-2 rounded ${evento.ativo ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
+                            title={evento.ativo ? 'Desativar' : 'Ativar'}
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteEventoLiturgico(evento.id)}
+                            className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
+                            title="Excluir"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Adicionar imagens para "{evento.periodo}"
+                        </label>
+                        <div className="border-2 border-dashed border-blue-300 rounded-lg p-3 text-center hover:border-blue-500 bg-white">
+                          <label className="cursor-pointer">
+                            <Upload size={20} className="text-blue-400 mx-auto mb-1" />
+                            <span className="text-sm text-blue-600">Clique para adicionar imagens</span>
+                            <input
+                              type="file"
+                              multiple
+                              accept="image/*"
+                              onChange={(e) => handleAddImagemEvento(evento.id, e)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
+                      </div>
+                      {evento.imagens.length > 0 && (
+                        <div>
+                          <p className="text-sm font-medium mb-2">Imagens deste momento ({evento.imagens.length}):</p>
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+                            {evento.imagens.map((imagem, idx) => (
+                              <div key={idx} className="relative border rounded overflow-hidden group">
+                                <img 
+                                  src={imagem} 
+                                  alt={`${evento.periodo} ${idx}`} 
+                                  className="w-full h-24 object-cover bg-gray-100"
+                                  onError={(e) => {
+                                    // ✅ Só corrige se NÃO for Base64 e NÃO começar com /
+                                    if (!imagem.startsWith('data:image') && !imagem.startsWith('/')) {
+                                      const corrigida = corrigirUrlImagem(imagem);
+                                      (e.target as HTMLImageElement).src = corrigida;
+                                    }
+                                  }}
+                                />
+                                <button
+                                  onClick={() => handleDeleteImagemEvento(evento.id, idx)}
+                                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  ×
+                                </button>
+                                <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1">
+                                  Imagem {idx + 1}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
               )}
+            </div>
+          )}
+
+          {/* POPUP */}
+          {activeTab === 'popup' && (
+            <div>
+              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Popups</h2>
+              <p className="text-gray-600 mb-4 text-sm">Imagens que aparecem ao entrar no site ({popups.filter(p => p.ativo).length} ativos)</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+                <div className="border-2 border-dashed border-blue-300 rounded-xl p-6 text-center hover:border-blue-500 transition-colors bg-blue-50/50">
+                  <Upload className="w-10 h-10 text-blue-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-2">Adicionar popups por upload</p>
+                  <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm cursor-pointer hover:bg-blue-700 transition-colors">
+                    <Plus size={16} />
+                    Upload de Imagens
+                    <input 
+                      type="file" 
+                      multiple 
+                      accept="image/*" 
+                      onChange={handleUploadPopupImagem} 
+                      className="hidden" 
+                    />
+                  </label>
+                </div>
+                <div className="border-2 border-dashed border-green-300 rounded-xl p-6 text-center hover:border-green-500 transition-colors bg-green-50/50">
+                  <Globe className="w-10 h-10 text-green-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-600 mb-2">Adicionar popup por URL</p>
+                  <button
+                    onClick={handleAddPopupFromUrl}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 transition-colors"
+                  >
+                    <Plus size={16} />
+                    Adicionar por URL
+                  </button>
+                </div>
+              </div>
+              {popups.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <Bell className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>Nenhum popup configurado</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {popups.map((popup, index) => (
+                    <div key={popup.id} className="border rounded-xl overflow-hidden bg-white shadow-sm hover:shadow-md transition-shadow">
+                      <div className="relative">
+                        <div className="relative h-48 bg-gray-100">
+                          <img 
+                            src={popup.imagem} 
+                            alt="Popup"
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              if (!popup.imagem.startsWith('data:image') && !popup.imagem.startsWith('/')) {
+                                const corrigida = corrigirUrlImagem(popup.imagem);
+                                (e.target as HTMLImageElement).src = corrigida;
+                              }
+                            }}
+                          />
+                          <div className="absolute top-2 right-2 flex gap-1">
+                            <button 
+                              onClick={() => handlePreviewPopup(popup)}
+                              className="p-1.5 bg-blue-500 rounded-full text-white hover:bg-blue-600"
+                              title="Visualizar"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button 
+                              onClick={() => handleEditPopup(popup.id)}
+                              className="p-1.5 bg-yellow-500 rounded-full text-white hover:bg-yellow-600"
+                              title="Editar"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                            <button 
+                              onClick={() => handleToggleAtivoPopup(popup.id)}
+                              className={`p-1.5 rounded-full ${popup.ativo ? 'bg-green-500' : 'bg-red-500'} text-white hover:opacity-90`}
+                              title={popup.ativo ? 'Desativar' : 'Ativar'}
+                            >
+                              {popup.ativo ? <Eye size={14} /> : <X size={14} />}
+                            </button>
+                            <button 
+                              onClick={() => handleDeletePopup(popup.id)}
+                              className="p-1.5 bg-red-500 rounded-full text-white hover:bg-red-600"
+                              title="Excluir"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                          <div className="absolute bottom-2 left-2 flex gap-1">
+                            {index > 0 && (
+                              <button 
+                                onClick={() => handleReorderPopup(popup.id, 'up')}
+                                className="p-1 bg-gray-800/70 rounded text-white hover:bg-gray-900"
+                                title="Mover para cima"
+                              >
+                                <ChevronLeft size={12} />
+                              </button>
+                            )}
+                            {index < popups.length - 1 && (
+                              <button 
+                                onClick={() => handleReorderPopup(popup.id, 'down')}
+                                className="p-1 bg-gray-800/70 rounded text-white hover:bg-gray-900"
+                                title="Mover para baixo"
+                              >
+                                <ChevronRight size={12} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        {popup.ativo && (
+                          <div className="absolute top-2 left-2">
+                            <span className="px-2 py-1 bg-green-500 text-white text-xs rounded-full">
+                              Ativo
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                      <div className="p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-sm font-medium text-gray-700">
+                            Ordem: {popup.ordem + 1}
+                          </span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${popup.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                            {popup.ativo ? 'Visível' : 'Oculto'}
+                          </span>
+                        </div>
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-xs text-gray-600 block mb-1">Tempo de Exibição</label>
+                            <div className="flex gap-1">
+                              {temposExibicao.map((tempo) => (
+                                <button
+                                  key={tempo.segundos}
+                                  onClick={() => handleTempoExibicaoPopup(popup.id, tempo.segundos)}
+                                  className={`flex-1 py-2 text-xs rounded transition-colors ${
+                                    popup.tempoExibicao === tempo.segundos
+                                      ? 'bg-blue-600 text-white'
+                                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                  }`}
+                                >
+                                  {tempo.segundos}s
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          {editingPopupId === popup.id && (
+                            <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                              <label className="text-xs text-gray-600 block mb-1">URL da Imagem</label>
+                              <input
+                                type="text"
+                                value={popup.imagem}
+                                onChange={(e) => handleSavePopupEdit(popup.id, 'imagem', e.target.value)}
+                                className="w-full text-sm border rounded px-2 py-1 mb-2"
+                                placeholder="URL da imagem"
+                              />
+                              <button
+                                onClick={() => setEditingPopupId(null)}
+                                className="w-full py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+                              >
+                                <Check size={12} className="inline mr-1" />
+                                Salvar Edição
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="mt-8 p-4 bg-gray-50 rounded-lg border">
+                <h4 className="font-medium text-gray-700 mb-2">Como funciona:</h4>
+                <ul className="text-sm text-gray-600 space-y-1">
+                  <li>• Os popups ativos aparecem quando os visitantes acessam o site</li>
+                  <li>• A ordem define a sequência de exibição (0 = primeiro)</li>
+                  <li>• O tempo define quantos segundos cada popup fica visível</li>
+                  <li>• Salve as alterações para que os popups apareçam no site</li>
+                </ul>
+              </div>
             </div>
           )}
 
@@ -733,21 +1201,17 @@ export default function PainelAdmin() {
           {activeTab === 'recados' && (
             <div>
               <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Recados</h2>
-              <p className="text-gray-600 mb-4 text-sm">Avisos e notícias urgentes (apenas texto)</p>
-
-              {/* Formulário de novo recado */}
+              <p className="text-gray-600 mb-4 text-sm">Avisos que aparecem na página de recados ({recados.filter(r => r.ativo).length} ativos)</p>
               <div className="bg-gray-50/50 rounded-lg p-4 mb-6">
                 <h3 className="font-bold text-gray-700 mb-3">Novo Recado</h3>
-                
                 <div className="space-y-4">
                   <input
                     type="text"
                     value={novoRecado.titulo}
                     onChange={(e) => setNovoRecado({ ...novoRecado, titulo: e.target.value })}
-                    placeholder="Título do recado (ex: Aviso importante)"
+                    placeholder="Título do recado"
                     className="w-full p-3 border border-gray-300 rounded-lg"
                   />
-
                   <textarea
                     value={novoRecado.conteudo}
                     onChange={(e) => setNovoRecado({ ...novoRecado, conteudo: e.target.value })}
@@ -755,7 +1219,34 @@ export default function PainelAdmin() {
                     rows={4}
                     className="w-full p-3 border border-gray-300 rounded-lg"
                   />
-
+                  <div className="flex flex-wrap gap-4">
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="urgente"
+                        checked={novoRecado.urgente}
+                        onChange={(e) => setNovoRecado({ ...novoRecado, urgente: e.target.checked })}
+                        className="w-4 h-4 text-red-600"
+                      />
+                      <label htmlFor="urgente" className="text-sm font-medium text-gray-700">
+                        <AlertCircle size={14} className="inline mr-1 text-red-500" />
+                        Marcar como urgente
+                      </label>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="ativo"
+                        checked={novoRecado.ativo}
+                        onChange={(e) => setNovoRecado({ ...novoRecado, ativo: e.target.checked })}
+                        className="w-4 h-4 text-green-600"
+                      />
+                      <label htmlFor="ativo" className="text-sm font-medium text-gray-700">
+                        <Eye size={14} className="inline mr-1 text-green-500" />
+                        Ativo (visível no site)
+                      </label>
+                    </div>
+                  </div>
                   <div className="flex gap-3">
                     <button
                       onClick={handleAddRecado}
@@ -769,27 +1260,47 @@ export default function PainelAdmin() {
                   </div>
                 </div>
               </div>
-
-              {/* Lista de recados existentes */}
-              <h3 className="font-bold text-gray-700 mb-3">Recados Existentes ({recados.length})</h3>
-              
+              <h3 className="font-bold text-gray-700 mb-3">Recados ({recados.length})</h3>
               {recados.length === 0 ? (
                 <p className="text-gray-500 text-center py-6">Nenhum recado cadastrado</p>
               ) : (
                 <div className="space-y-4">
                   {recados.map((recado) => (
-                    <div key={recado.id} className="border rounded-lg p-4 hover:border-blue-300 bg-white/50">
+                    <div key={recado.id} className={`border rounded-lg p-4 hover:shadow-sm transition-shadow ${
+                      recado.urgente ? 'bg-red-50 border-red-200' : 'bg-white'
+                    }`}>
                       <div className="flex justify-between items-start mb-3">
                         <div className="flex-1">
-                          <h4 className="font-bold text-gray-800">{recado.titulo}</h4>
+                          <div className="flex items-start gap-2">
+                            <h4 className="font-bold text-gray-800">{recado.titulo}</h4>
+                            {recado.urgente && (
+                              <span className="px-2 py-0.5 bg-red-500 text-white text-xs rounded-full animate-pulse">
+                                ⚠️ URGENTE
+                              </span>
+                            )}
+                          </div>
                           <div className="flex items-center gap-3 mt-1">
                             <span className={`text-xs px-2 py-1 rounded-full ${recado.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                               {recado.ativo ? 'Ativo' : 'Inativo'}
                             </span>
-                            <span className="text-xs text-gray-500">{recado.dataCriacao}</span>
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <Clock size={10} />
+                              {recado.dataCriacao}
+                            </span>
                           </div>
                         </div>
                         <div className="flex gap-2">
+                          <button
+                            onClick={() => handleToggleUrgenteRecado(recado.id)}
+                            className={`p-2 rounded ${
+                              recado.urgente 
+                                ? 'bg-yellow-100 text-yellow-600 hover:bg-yellow-200' 
+                                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            }`}
+                            title={recado.urgente ? 'Remover urgência' : 'Marcar como urgente'}
+                          >
+                            <AlertCircle size={16} />
+                          </button>
                           <button
                             onClick={() => handleToggleAtivoRecado(recado.id)}
                             className={`p-2 rounded ${recado.ativo ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
@@ -806,409 +1317,7 @@ export default function PainelAdmin() {
                           </button>
                         </div>
                       </div>
-                      
-                      <p className="text-gray-700 text-sm">{recado.conteudo}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* EVENTOS */}
-          {activeTab === 'eventos' && (
-            <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Eventos e Celebrações</h2>
-              <p className="text-gray-600 mb-4 text-sm">Configure eventos litúrgicos e celebrações especiais</p>
-
-              {/* Formulário de novo evento */}
-              <div className="bg-gray-50/50 rounded-lg p-4 mb-6">
-                <h3 className="font-bold text-gray-700 mb-3">Novo Evento</h3>
-                
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Seletor de página */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Onde o evento aparecerá?</label>
-                      <select
-                        value={novoEvento.paginaDestino}
-                        onChange={(e) => setNovoEvento({ ...novoEvento, paginaDestino: e.target.value as any })}
-                        className="w-full p-3 border border-gray-300 rounded-lg"
-                      >
-                        {paginasDestino.filter(p => p.id !== 'carrosselFotos' && p.id !== 'destaqueHome').map((pagina) => (
-                          <option key={pagina.id} value={pagina.id}>
-                            {pagina.nome}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    {/* Seletor de tipo de conteúdo */}
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Tipo de Conteúdo</label>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => setNovoEvento({ ...novoEvento, tipo: 'texto' })}
-                          className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                            novoEvento.tipo === 'texto' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
-                          }`}
-                        >
-                          Texto
-                        </button>
-                        <button
-                          onClick={() => setNovoEvento({ ...novoEvento, tipo: 'imagem' })}
-                          className={`flex-1 py-2 rounded-lg text-sm font-medium ${
-                            novoEvento.tipo === 'imagem' ? 'bg-blue-100 text-blue-700 border border-blue-300' : 'bg-gray-100 border'
-                          }`}
-                        >
-                          Imagem
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <input
-                    type="text"
-                    value={novoEvento.titulo}
-                    onChange={(e) => setNovoEvento({ ...novoEvento, titulo: e.target.value })}
-                    placeholder="Título do evento (ex: Corpus Christi, Batizados)"
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                  />
-
-                  {/* Texto da faixa */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Texto da Faixa (aparece no banner)
-                    </label>
-                    <input
-                      type="text"
-                      value={novoEvento.textoFaixa}
-                      onChange={(e) => setNovoEvento({ ...novoEvento, textoFaixa: e.target.value })}
-                      placeholder="Ex: Corpus Christi - 30 de junho às 10h"
-                      className="w-full p-3 border border-gray-300 rounded-lg"
-                    />
-                  </div>
-
-                  {/* Seletor de cores do banner */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Cor da Faixa (Banner)</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      {coresBanner.map((cor) => (
-                        <button
-                          key={cor.nome}
-                          onClick={() => setNovoEvento({ 
-                            ...novoEvento, 
-                            corBanner: cor.from, 
-                            corBannerTo: cor.to 
-                          })}
-                          className={`flex flex-col items-center gap-2 p-3 rounded-lg border ${
-                            novoEvento.corBanner === cor.from 
-                              ? 'ring-2 ring-blue-500' 
-                              : 'border-gray-300 hover:border-gray-400'
-                          }`}
-                          title={cor.nome}
-                        >
-                          <div 
-                            className="w-full h-3 rounded" 
-                            style={{ 
-                              background: `linear-gradient(135deg, ${cor.from}, ${cor.to})` 
-                            }}
-                          />
-                          <span className="text-xs font-medium text-center">{cor.nome}</span>
-                          <span className="text-xs text-gray-500 text-center">{cor.descricao}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
-                      <input
-                        type="date"
-                        value={novoEvento.data}
-                        onChange={(e) => setNovoEvento({ ...novoEvento, data: e.target.value })}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Hora</label>
-                      <input
-                        type="time"
-                        value={novoEvento.hora}
-                        onChange={(e) => setNovoEvento({ ...novoEvento, hora: e.target.value })}
-                        className="w-full p-2.5 border border-gray-300 rounded-lg text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Local</label>
-                      <input
-                        type="text"
-                        value={novoEvento.local}
-                        onChange={(e) => setNovoEvento({ ...novoEvento, local: e.target.value })}
-                        placeholder="Ex: Igreja Matriz"
-                        className="w-full p-2.5 border border-gray-300 rounded-lg text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  {novoEvento.tipo === 'texto' ? (
-                    <textarea
-                      value={novoEvento.conteudo}
-                      onChange={(e) => setNovoEvento({ ...novoEvento, conteudo: e.target.value })}
-                      placeholder="Descrição detalhada do evento..."
-                      rows={4}
-                      className="w-full p-3 border border-gray-300 rounded-lg"
-                    />
-                  ) : (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Imagem do Evento</label>
-                      {novoEvento.imagem ? (
-                        <div className="relative inline-block">
-                          <img src={novoEvento.imagem} alt="Preview" className="h-40 object-contain border rounded-lg" />
-                          <button
-                            onClick={handleDeleteEventoImagem}
-                            className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
-                          >
-                            <X size={14} className="text-white" />
-                          </button>
-                        </div>
-                      ) : (
-                        <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-500 bg-white">
-                          <Upload size={24} className="text-gray-400 mb-2" />
-                          <span className="text-sm text-gray-600">Clique para enviar imagem do evento</span>
-                          <span className="text-xs text-gray-500 mt-1">JPG, PNG</span>
-                          <input
-                            type="file"
-                            accept="image/*"
-                            onChange={handleEventoUploadImagem}
-                            className="hidden"
-                          />
-                        </label>
-                      )}
-                    </div>
-                  )}
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleAddEvento}
-                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <Plus size={18} />
-                        Adicionar Evento
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Lista de eventos existentes */}
-              <h3 className="font-bold text-gray-700 mb-3">Eventos Existentes ({eventos.length})</h3>
-              
-              {eventos.length === 0 ? (
-                <p className="text-gray-500 text-center py-6">Nenhum evento cadastrado</p>
-              ) : (
-                <div className="space-y-4">
-                  {eventos.map((evento) => (
-                    <div key={evento.id} className="border rounded-lg p-4 hover:border-blue-300 bg-white/50">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-800">{evento.titulo}</h4>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className={`text-xs px-2 py-1 rounded-full ${evento.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {evento.ativo ? 'Ativo' : 'Inativo'}
-                            </span>
-                            <span className="text-xs text-gray-500">{evento.dataCriacao}</span>
-                            <span className="text-xs text-gray-500">
-                              {paginasDestino.find(p => p.id === evento.paginaDestino)?.nome || 'Evento'}
-                            </span>
-                            <div 
-                              className="w-4 h-4 rounded-full border" 
-                              style={{ 
-                                background: `linear-gradient(135deg, ${evento.corBanner}, ${evento.corBannerTo})` 
-                              }}
-                              title="Cor do banner"
-                            />
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleToggleAtivoEvento(evento.id)}
-                            className={`p-2 rounded ${evento.ativo ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
-                            title={evento.ativo ? 'Desativar' : 'Ativar'}
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteEvento(evento.id)}
-                            className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                            title="Excluir"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                        <div className="text-sm">
-                          <span className="font-medium">Data: </span>
-                          <span className="text-gray-700">{evento.data}</span>
-                        </div>
-                        <div className="text-sm">
-                          <span className="font-medium">Hora: </span>
-                          <span className="text-gray-700">{evento.hora || 'Não definida'}</span>
-                        </div>
-                        <div className="text-sm">
-                          <span className="font-medium">Local: </span>
-                          <span className="text-gray-700">{evento.local || 'Não definido'}</span>
-                        </div>
-                      </div>
-                      
-                      {evento.textoFaixa && (
-                        <div className="mb-3">
-                          <span className="text-sm font-medium">Texto da faixa: </span>
-                          <span className="text-sm text-gray-700">{evento.textoFaixa}</span>
-                        </div>
-                      )}
-                      
-                      {evento.tipo === 'texto' ? (
-                        <p className="text-gray-700 text-sm">{evento.conteudo}</p>
-                      ) : evento.imagem && (
-                        <div className="mt-2">
-                          <img src={evento.imagem} alt={evento.titulo} className="h-40 object-contain rounded" />
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* POPUPS */}
-          {activeTab === 'popups' && (
-            <div>
-              <h2 className="text-xl font-bold text-gray-800 mb-2">Gerenciar Popups</h2>
-              <p className="text-gray-600 mb-4 text-sm">Avisos que aparecem ao entrar no site (apenas imagens)</p>
-
-              {/* Formulário de novo popup */}
-              <div className="bg-gray-50/50 rounded-lg p-4 mb-6">
-                <h3 className="font-bold text-gray-700 mb-3">Novo Popup</h3>
-                
-                <div className="space-y-4">
-                  <input
-                    type="text"
-                    value={novoPopup.titulo}
-                    onChange={(e) => setNovoPopup({ ...novoPopup, titulo: e.target.value })}
-                    placeholder="Título do popup (apenas para organização)"
-                    className="w-full p-3 border border-gray-300 rounded-lg"
-                  />
-
-                  {/* Apenas imagem para popups */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Imagem do Popup</label>
-                    {novoPopup.imagem ? (
-                      <div className="relative inline-block">
-                        <img src={novoPopup.imagem} alt="Preview" className="h-40 object-contain border rounded-lg" />
-                        <button
-                          onClick={handleDeletePopupImagem}
-                          className="absolute -top-2 -right-2 bg-red-500 rounded-full p-1"
-                        >
-                          <X size={14} className="text-white" />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 cursor-pointer hover:border-blue-500 bg-white">
-                        <Upload size={24} className="text-gray-400 mb-2" />
-                        <span className="text-sm text-gray-600">Clique para enviar imagem do popup</span>
-                        <span className="text-xs text-gray-500 mt-1">JPG, PNG (Tamanho recomendado: 600x400px)</span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handlePopupUploadImagem}
-                          className="hidden"
-                        />
-                      </label>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Intervalo de exibição (segundos)
-                    </label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="30"
-                      value={novoPopup.intervalo}
-                      onChange={(e) => setNovoPopup({ ...novoPopup, intervalo: parseInt(e.target.value) })}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between text-sm text-gray-600 mt-1">
-                      <span>1s</span>
-                      <span>{novoPopup.intervalo}s</span>
-                      <span>30s</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3">
-                    <button
-                      onClick={handleAddPopup}
-                      disabled={!novoPopup.imagem}
-                      className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <div className="flex items-center justify-center gap-2">
-                        <Plus size={18} />
-                        Adicionar Popup
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Lista de popups existentes */}
-              <h3 className="font-bold text-gray-700 mb-3">Popups Existentes ({popups.length})</h3>
-              
-              {popups.length === 0 ? (
-                <p className="text-gray-500 text-center py-6">Nenhum popup cadastrado</p>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {popups.map((popup) => (
-                    <div key={popup.id} className="border rounded-lg p-4 hover:border-blue-300 bg-white/50">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex-1">
-                          <h4 className="font-bold text-gray-800">{popup.titulo}</h4>
-                          <div className="flex items-center gap-3 mt-1">
-                            <span className={`text-xs px-2 py-1 rounded-full ${popup.ativo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                              {popup.ativo ? 'Ativo' : 'Inativo'}
-                            </span>
-                            <span className="text-xs text-gray-500">Intervalo: {popup.intervalo}s</span>
-                          </div>
-                        </div>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleToggleAtivoPopup(popup.id)}
-                            className={`p-2 rounded ${popup.ativo ? 'bg-red-100 text-red-600 hover:bg-red-200' : 'bg-green-100 text-green-600 hover:bg-green-200'}`}
-                            title={popup.ativo ? 'Desativar' : 'Ativar'}
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button
-                            onClick={() => handleDeletePopup(popup.id)}
-                            className="p-2 bg-red-100 text-red-600 rounded hover:bg-red-200"
-                            title="Excluir"
-                          >
-                            <Trash2 size={16} />
-                          </button>
-                        </div>
-                      </div>
-                      
-                      {popup.imagem && (
-                        <div className="mt-2">
-                          <img src={popup.imagem} alt={popup.titulo} className="w-full h-40 object-contain rounded" />
-                        </div>
-                      )}
+                      <p className="text-gray-700 text-sm whitespace-pre-line">{recado.conteudo}</p>
                     </div>
                   ))}
                 </div>
@@ -1217,7 +1326,6 @@ export default function PainelAdmin() {
           )}
         </div>
 
-        {/* Botão para salvar e publicar */}
         <div className="text-center mt-6">
           <button
             onClick={salvarEPublicar}
@@ -1237,20 +1345,86 @@ export default function PainelAdmin() {
             )}
           </button>
           <p className="text-sm text-gray-600 mt-2">
-            As alterações serão publicadas no site imediatamente
+            As alterações aparecerão no site imediatamente
           </p>
         </div>
       </main>
 
+      {previewPopup && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+            <div className="p-4 border-b flex justify-between items-center">
+              <h3 className="font-bold text-lg">Visualização do Popup</h3>
+              <button
+                onClick={() => setPreviewPopup(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            <div className="p-6">
+              <div className="mb-4 border rounded-lg overflow-hidden">
+                <img 
+                  src={previewPopup.imagem} 
+                  alt="Preview Popup"
+                  className="w-full h-auto max-h-[60vh] object-contain bg-gray-50"
+                  onError={(e) => {
+                    if (!previewPopup.imagem.startsWith('data:image') && !previewPopup.imagem.startsWith('/')) {
+                      const corrigida = corrigirUrlImagem(previewPopup.imagem);
+                      (e.target as HTMLImageElement).src = corrigida;
+                    }
+                  }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                <div>
+                  <p className="text-gray-600">Status:</p>
+                  <p className={`font-medium ${previewPopup.ativo ? 'text-green-600' : 'text-red-600'}`}>
+                    {previewPopup.ativo ? 'Ativo' : 'Inativo'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Tempo de exibição:</p>
+                  <p className="font-medium">{previewPopup.tempoExibicao} segundos</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Ordem:</p>
+                  <p className="font-medium">{previewPopup.ordem + 1}º</p>
+                </div>
+                <div>
+                  <p className="text-gray-600">Tipo:</p>
+                  <p className="font-medium">Imagem Popup</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-4 border-t flex justify-end gap-3">
+              <button
+                onClick={() => setPreviewPopup(null)}
+                className="px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Fechar
+              </button>
+              <button
+                onClick={() => {
+                  handleEditPopup(previewPopup.id);
+                  setPreviewPopup(null);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Editar Popup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <footer className="mt-8 border-t bg-white/90 backdrop-blur-sm py-4 relative z-10">
         <div className="container mx-auto px-4 text-center text-gray-600 text-sm">
-          <p>© {new Date().getFullYear()} Santuário de Fátima - Painel Administrativo</p>
-          <p className="mt-1">Sistema de gestão de conteúdo</p>
+          <p>© {new Date().getFullYear()} Santuário de Fátima - Sistema Administrativo</p>
           <div className="mt-2 text-xs text-gray-500">
-            Usuário: {localStorage.getItem('admin_user') || 'Admin'} • Última publicação: {new Date().toLocaleDateString()}
-          </div>
-          <div className="mt-2 text-xs text-gray-500">
-            Total de itens: {carrosselHome.length + recados.length + eventos.length + popups.length}
+            Acessado por: {localStorage.getItem('admin_user') || 'Admin'} | 
+            Versão: 2.1 | 
+            Última atualização: {new Date().toLocaleDateString('pt-BR')}
           </div>
         </div>
       </footer>

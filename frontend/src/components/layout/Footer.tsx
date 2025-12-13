@@ -1,5 +1,7 @@
-import { Mail, Phone, MapPin, Home, Calendar, DollarSign, Cross, Book, Users, Church, Info, Contact } from "lucide-react";
+﻿import { Mail, Phone, MapPin, Home, Calendar, DollarSign, Cross, Book, Users, Church, Info, Contact, Shield, FileText, HelpCircle } from "lucide-react";
 import { Link } from "react-router-dom";
+import ScrollToAnchor from "../components/home/ScrollToAnchor";
+import ScrollToTop from "../components/utils/ScrollToTop";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -46,7 +48,7 @@ export default function Footer() {
               <li>
                 <Link to="/historia" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
                   <Book size={15} className="text-blue-400 group-hover:scale-110 transition-transform" />
-                  <span>História</span>
+                  <span>Historia</span>
                 </Link>
               </li>
               <li>
@@ -56,7 +58,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/santododia" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
+                <Link to="/santo-do-dia" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm group">
                   <Church size={15} className="text-blue-400 group-hover:scale-110 transition-transform" />
                   <span>Santo do Dia</span>
                 </Link>
@@ -85,7 +87,7 @@ export default function Footer() {
               <li>
                 <Link to="/calendarioliturgico" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
                   <Calendar size={15} className="text-blue-400" />
-                  <span>Calendário Litúrgico</span>
+                  <span>Calendario Litúrgico</span>
                 </Link>
               </li>
               {/* MOMENTOS LITÚRGICOS ADICIONADO AQUI */}
@@ -102,7 +104,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/sobrenos" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
+                <Link to="/sobre-nos" className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-sm">
                   <Info size={15} className="text-blue-400" />
                   <span>Sobre Nós</span>
                 </Link>
@@ -152,6 +154,40 @@ export default function Footer() {
                     santuarionsradefatima@santoamaro.org.br
                   </a>
                 </div>
+              </div>
+
+              {/* NOVA SEÇÃO: Links Legais */}
+              <div className="pt-2 mt-2 border-t border-gray-700">
+                <h4 className="font-medium mb-2 text-sm">Informações Legais</h4>
+                <ul className="space-y-1">
+                  <li>
+                    <Link 
+                      to="/politicadeprivacidade" 
+                      className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-xs"
+                    >
+                      <Shield size={12} className="text-blue-400" />
+                      <span>Política Privacidade</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/termosdeuso" 
+                      className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-xs"
+                    >
+                      <FileText size={12} className="text-blue-400" />
+                      <span>Termos de Uso</span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      to="/faq" 
+                      className="flex items-center gap-2 text-gray-300 hover:text-white transition-colors text-xs"
+                    >
+                      <HelpCircle size={12} className="text-blue-400" />
+                      <span>FAQ - Perguntas Frequentes</span>
+                    </Link>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>
@@ -237,12 +273,13 @@ export default function Footer() {
               © {currentYear} <span className="text-white font-medium">Santuário Nossa Senhora de Fátima</span>. Todos os direitos reservados.
             </p>
             
+            {/* ATUALIZADO: Links com os mesmos paths do App.tsx */}
             <div className="flex gap-3 text-sm">
-              <Link to="/politica-privacidade" className="text-gray-400 hover:text-white transition-colors">
+              <Link to="/politicadeprivacidade" className="text-gray-400 hover:text-white transition-colors">
                 Política de Privacidade
               </Link>
               <span className="text-gray-600">|</span>
-              <Link to="/termos-uso" className="text-gray-400 hover:text-white transition-colors">
+              <Link to="/termosdeuso" className="text-gray-400 hover:text-white transition-colors">
                 Termos de Uso
               </Link>
               <span className="text-gray-600">|</span>

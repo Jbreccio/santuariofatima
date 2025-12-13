@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Instagram, Youtube, Facebook, Play, X } from 'lucide-react';
+import { Instagram, Youtube, Facebook } from 'lucide-react';
+import { Play,PlayCircle } from 'lucide-react';
 
 // 1️⃣ Definir interfaces
 interface InstagramPost {

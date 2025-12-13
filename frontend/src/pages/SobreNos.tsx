@@ -1,5 +1,5 @@
-import Navigation from "@/components/layout/Navigation";
-import Footer from "@/components/layout/Footer";
+import Navigation from "../components/layout/Navigation";
+import Footer from "../components/layout/Footer";
 import { Heart, Users, Target, Lightbulb, BookOpen, Users2, HandHeart, Church } from "lucide-react";
 import { useState } from 'react';
 

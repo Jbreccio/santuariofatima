@@ -1,5 +1,9 @@
-// routes/AppRoutes.tsx - CORRIGIDO
+// frontend/src/routes/AppRoutes.tsx
 import { Routes, Route } from "react-router-dom";
+import ScrollToAnchor from "../components/home/ScrollToAnchor";
+import ScrollToTop from "../components/utils/ScrollToTop";
+
+// Importe TODAS as páginas (não esqueça nenhuma!)
 import Home from "../pages/Home";
 import Historia from "../pages/Historia";
 import Missas from "../pages/Missas";
@@ -11,21 +15,21 @@ import SobreNos from "../pages/SobreNos";
 import Doacoes from "../pages/Doacoes";
 import Pastorais from "../pages/Pastorais";
 import CalendarioLiturgico from "../pages/CalendarioLiturgico";
-import ScrollToAnchor from "@/components/home/ScrollToAnchor";
-import ScrollToTop from "@/components/utils/ScrollToTop";
-
-// ✅ IMPORTAÇÃO FALTANDO — ADICIONE ESTA LINHA:
+import Faq from "../pages/Faq";
+import TermosdeUso from "../pages/TermosdeUso";
+import PoliticadePrivacidade from "../pages/PoliticadePrivacidade";
 import LoginSecret from "../pages/LoginSecret";
-
-import Admin from "../pages/PainelAdmin";
+import PainelAdmin from "../pages/PainelAdmin"; // ← CORRIJA: "../pages/"
 import NotFound from "../pages/NotFound";
 
 export default function AppRoutes() {
   return (
     <> 
+      
       <ScrollToTop />
       <ScrollToAnchor/>
       <Routes>
+        {/* ROTAS PRINCIPAIS - VERIFIQUE OS PATHS! */}
         <Route path="/" element={<Home />} />
         <Route path="/historia" element={<Historia />} />
         <Route path="/missas" element={<Missas />} />
@@ -33,14 +37,25 @@ export default function AppRoutes() {
         <Route path="/contato" element={<Contato />} />
         <Route path="/momentosliturgicos" element={<MomentosLiturgicos />} />
         <Route path="/calendarioliturgico" element={<CalendarioLiturgico />} />
-        <Route path="/sobrenos" element={<SobreNos />} />
+        
+       
+        <Route path="/sobre-nos" element={<SobreNos />} />
+        
         <Route path="/doacoes" element={<Doacoes />} />
         <Route path="/pastorais" element={<Pastorais />} />
-        <Route path="/santododia" element={<SantoDoDia />} />
-               
+        
+       
+        <Route path="/santo-do-dia" element={<SantoDoDia />} />
+        
+        {/* ROTAS SECUNDÁRIAS */}
+        <Route path="/faq" element={<Faq />} />
+        <Route path="/termosdeuso" element={<TermosdeUso />} />
+        <Route path="/politicadeprivacidade" element={<PoliticadePrivacidade />} />
         <Route path="/loginsecret" element={<LoginSecret />} />
         
-        <Route path="/admin" element={<Admin />} />
+                       <Route path="/paineladmin" element={<PainelAdmin />} />
+        <Route path="/admin" element={<PainelAdmin />} />
+        {/* 404 - SEMPRE ÚLTIMA */}
         <Route path="*" element={<NotFound />} />
       </Routes>
     </>

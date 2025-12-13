@@ -1,14 +1,14 @@
 import { Link } from "wouter";
 import { ExternalLink } from "lucide-react";
 import Navigation from "../components/layout/Navigation";
-import Footer from "../components/layout/Footer";
 import { useState } from "react";
 import CarrosselFotos from "../components/home/CarrosselFotos";
 import RecadosHome from "../components/home/RecadosHome";
-import LiturgiaDiaria from "@/components/home/LiturgiaDiaria";
+import LiturgiaDiaria from "../components/home/LiturgiaDiaria";
 import VaticanNewsSection from "../components/home/VaticanNews";
 import { useAuth } from "../contexts/AuthContext";
-import SocialMediaPanel from "@/components/home/SocialMediaPanel";
+import SocialMediaPanel from "../components/home/SocialMediaPanel";
+import Footer from "../components/layout/Footer";
 
 export default function Home() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -80,8 +80,8 @@ export default function Home() {
       
       {/* POPUPS */}
       <RecadosHome />
-
-      {/* FOOTER */}
+      
+      {/* RODAPÉ */}      
       <Footer />
     </div>
   );
