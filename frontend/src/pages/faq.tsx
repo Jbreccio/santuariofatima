@@ -11,6 +11,7 @@ import {
   Users,          // ✅ Existe
   Globe           // ✅ Existe
 } from 'lucide-react';
+import Footer from '../components/layout/Footer';
 
 interface FAQItem {
   id: number;
@@ -285,6 +286,9 @@ export default function FAQ() {
           </div>
         </div>
       </div>
-    </div>
+   
+      {/* Footer */}
+      <Footer />
+      </div>
   );
 }

@@ -1,0 +1,29 @@
+// Vatican News - Mock para demonstração
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Cache-Control", "s-maxage=3600");
+  
+  const news = [
+    {
+      title: "Sistema Santuário Fátima em Demonstração",
+      description: "Versão provisória no Vercel. Sexta-feira: migração para Hostinger com atualizações automáticas.",
+      link: "#",
+      pubDate: new Date().toISOString(),
+      category: "Sistema"
+    },
+    {
+      title: "Próxima etapa: Hostinger 25GB + PostgreSQL",
+      description: "Na sexta, o sistema completo com banco de dados real e APIs em tempo real será implantado.",
+      link: "#",
+      pubDate: new Date().toISOString(),
+      category: "Atualização"
+    }
+  ];
+  
+  res.json({
+    success: true,
+    source: "mock_demo",
+    data: news,
+    timestamp: new Date().toISOString()
+  });
+}

@@ -1,0 +1,150 @@
+# docker-compose.yml (DESENVOLVIMENTO/LOCAL)
+version: '3.8'
+
+services:
+  # Banco de dados principal
+  postgres:
+    image: postgres:16-alpine
+    container_name: santuario-postgres
+    environment:
+      POSTGRES_DB: santuario_db
+      POSTGRES_USER: santuario_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-dev_password}  # Fallback para dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - santuario-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U santuario_user -d santuario_db"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Cache e sessões
+  redis:
+    image: redis:7-alpine
+    container_name: santuario-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - santuario-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Backend API (ATUALIZADO)
+  backend:
+    build:
+      context: .  # ✅ Agora usa a raiz do projeto
+      dockerfile: ./backend/Dockerfile  # ✅ Caminho específico
+    container_name: santuario-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development  # ✅ Alterado para development (hot reload)
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=santuario_db
+      - DB_USER=santuario_user
+      - DB_PASSWORD=${DB_PASSWORD:-dev_password}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - JWT_SECRET=${JWT_SECRET:-dev_jwt_secret_123}
+      # APIs de Redes Sociais (NOVO) ⭐
+      - INSTAGRAM_ACCESS_TOKEN=${INSTAGRAM_TOKEN}
+      - INSTAGRAM_USER_ID=${INSTAGRAM_USER_ID}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - YOUTUBE_CHANNEL_ID=${YOUTUBE_CHANNEL_ID}
+      - FACEBOOK_ACCESS_TOKEN=${FACEBOOK_TOKEN}
+      - FACEBOOK_PAGE_ID=${FACEBOOK_PAGE_ID}
+    volumes:
+      - ./backend:/app/backend  # ✅ Mapeamento correto
+      - /app/backend/node_modules  # ✅ Evita sobrescrever node_modules
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - santuario-network
+    restart: unless-stopped
+    command: npm run dev  # ✅ Hot reload ativado
+
+  # Frontend (ATUALIZADO)
+  frontend:
+    build:
+      context: .  # ✅ Agora usa a raiz do projeto
+      dockerfile: ./frontend/Dockerfile  # ✅ Caminho específico
+    container_name: santuario-frontend
+    ports:
+      - "5173:5173"  # ✅ Vite usa 5173, não 80
+    environment:
+      - VITE_API_URL=http://localhost:3000  # ✅ Variável para frontend
+    volumes:
+      - ./frontend:/app/frontend  # ✅ Mapeamento correto
+      - /app/frontend/node_modules  # ✅ Evita sobrescrever node_modules
+    depends_on:
+      - backend
+    networks:
+      - santuario-network
+    restart: unless-stopped
+
+  # Nginx (OPCIONAL PARA DEV - pode remover se quiser)
+  nginx:
+    image: nginx:alpine
+    container_name: santuario-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf  # ✅ Config específica dev
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - santuario-network
+    restart: unless-stopped
+
+  # Monitoramento (OPCIONAL - pode comentar para desenvolvimento)
+  # prometheus:
+  #   image: prom/prometheus:latest
+  #   container_name: santuario-prometheus
+  #   ports:
+  #     - "9090:9090"
+  #   volumes:
+  #     - ./infra/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml  # ✅ Caminho atualizado
+  #     - prometheus_data:/prometheus
+  #   networks:
+  #     - santuario-network
+
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: santuario-grafana
+  #   ports:
+  #     - "3001:3000"
+  #   environment:
+  #     - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #     - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning  # ✅ Caminho atualizado
+  #   depends_on:
+  #     - prometheus
+  #   networks:
+  #     - santuario-network
+
+networks:
+  santuario-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  # prometheus_data:  # Comentado com monitoramento
+  # grafana_data:

@@ -1,4 +1,4 @@
-// pages/admin/PainelAdmin.tsx - VERSÃO FINAL CORRIGIDA PARA BETO
+// pages/admin/PainelAdmin.tsx - VERSÃO ESTÁVEL PARA PRODUÇÃO (SEM ALTERAR LAYOUT)
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -229,92 +229,8 @@ export default function PainelAdmin() {
     }
   }, [isAuthenticated]);
 
-  // ============ SINCRONIZAÇÃO AUTOMÁTICA ============
-  useEffect(() => {
-    // Dispara evento quando dados são salvos
-    const handleSalvamento = () => {
-      console.log('🔁 Disparando sincronização...');
-      
-      // 1. Salva nos DOIS storages para compatibilidade
-      const dadosAtuais = {
-        carrossel: fotosCarrossel,
-        momentosLiturgicos: eventosLiturgicos,
-        popups: popups,
-        recados: recados,
-        ultimaAtualizacao: new Date().toISOString()
-      };
-      
-      localStorage.setItem('santuario-dados', JSON.stringify(dadosAtuais));
-      localStorage.setItem('dados-santuario', JSON.stringify(dadosAtuais)); // ← COMPATIBILIDADE
-      
-      // 2. Dispara evento customizado
-      window.dispatchEvent(new CustomEvent('dadosAtualizados', {
-        detail: dadosAtuais
-      }));
-      
-      // 3. Dispara evento de storage (para outras abas)
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'dados-santuario',
-        newValue: JSON.stringify(dadosAtuais),
-        url: window.location.href
-      }));
-    };
-    
-    // Executa quando componentes principais mudam
-    handleSalvamento();
-    
-  }, [fotosCarrossel, eventosLiturgicos, popups, recados]);
-
-  // Sincronização automática entre abas
-  useEffect(() => {
-    const sincronizarComOutrasAbas = () => {
-      console.log('🔄 Verificando sincronização entre abas...');
-      
-      // Verifica se há dados em 'santuario-dados' mas não em 'dados-santuario'
-      const dadosNovos = localStorage.getItem('santuario-dados');
-      const dadosAntigos = localStorage.getItem('dados-santuario');
-      
-      if (dadosNovos && (!dadosAntigos || dadosNovos !== dadosAntigos)) {
-        console.log('📤 Sincronizando: santuario-dados → dados-santuario');
-        localStorage.setItem('dados-santuario', dadosNovos);
-      }
-      
-      if (dadosAntigos && (!dadosNovos || dadosAntigos !== dadosNovos)) {
-        console.log('📥 Sincronizando: dados-santuario → santuario-dados');
-        localStorage.setItem('santuario-dados', dadosAntigos);
-      }
-    };
-    
-    // Executa a cada 5 segundos
-    const interval = setInterval(sincronizarComOutrasAbas, 5000);
-    
-    // Escuta eventos de storage de outras abas
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'dados-santuario' && e.newValue) {
-        console.log('📡 Recebendo atualização de outra aba');
-        try {
-          const dados = JSON.parse(e.newValue);
-          setFotosCarrossel(dados.carrossel || []);
-          setEventosLiturgicos(dados.momentosLiturgicos || []);
-          setPopups(dados.popups || []);
-          setRecados(dados.recados || []);
-        } catch (error) {
-          console.error('Erro ao processar atualização:', error);
-        }
-      }
-    };
-    
-    window.addEventListener('storage', handleStorageChange);
-    
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('storage', handleStorageChange);
-    };
-  }, []);
-
   // ============ FUNÇÕES PRINCIPAIS ============
   const salvarDadosNoLocalStorage = useCallback(() => {
-    console.log('💾 Salvando dados...');
     const dadosParaSalvar = {
       carrossel: fotosCarrossel,
       momentosLiturgicos: eventosLiturgicos,
@@ -337,60 +253,23 @@ export default function PainelAdmin() {
       }
     }
     setSaveStatus('saving');
-    
     try {
-      // 1. Remove controle de popups para forçar exibição
       localStorage.removeItem('popupFechadoHoje');
-      localStorage.removeItem('popupClosed');
-      localStorage.removeItem('popupLastShown');
+      salvarDadosNoLocalStorage();
       
-      // 2. Salva dados EM AMBOS OS STORAGES
-      const dadosParaSalvar = {
-        carrossel: fotosCarrossel,
-        momentosLiturgicos: eventosLiturgicos,
-        popups: popups,
-        recados: recados,
-        ultimaAtualizacao: new Date().toISOString()
-      };
-      
-      localStorage.setItem('santuario-dados', JSON.stringify(dadosParaSalvar));
-      localStorage.setItem('dados-santuario', JSON.stringify(dadosParaSalvar)); // ← CRÍTICO!
-      
-      // 3. Também salva recados separadamente para compatibilidade
-      if (recados.length > 0) {
-        const recadosParaSalvar = recados.map(item => ({ ...item, tipo: 'recado' as const }));
-        localStorage.setItem('recados-santuario', JSON.stringify(recadosParaSalvar));
-      }
-      
-      // 4. Dispara eventos para sincronizar outras abas
+      // Dispara evento para atualizar outras abas
       window.dispatchEvent(new CustomEvent('dadosAtualizados', {
         detail: { 
           timestamp: new Date().toISOString(),
-          origem: 'PainelAdmin',
-          dados: dadosParaSalvar
+          origem: 'PainelAdmin'
         }
       }));
-      
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'dados-santuario',
-        newValue: JSON.stringify(dadosParaSalvar),
-        url: window.location.href,
-        storageArea: localStorage
-      }));
-      
-      // 5. Notificação visual
+
       setTimeout(() => {
         setSaveStatus('published');
-        console.log('🎉 Dados publicados em AMBOS storages!');
-        
-        // Mostra notificação para abrir outras abas
-        if (window.confirm('✅ Dados salvos! Deseja abrir o site em nova aba para testar?')) {
-          window.open('/', '_blank');
-        }
-        
+        console.log('🎉 Dados publicados com sucesso!');
         setTimeout(() => setSaveStatus('idle'), 3000);
       }, 1000);
-      
     } catch (error) {
       console.error('❌ ERRO AO SALVAR:', error);
       setSaveStatus('error');
@@ -572,7 +451,7 @@ export default function PainelAdmin() {
     if (url && url.trim()) {
       const novoPopupItem: PopupItem = {
         id: Date.now() + '',
-        imagem: url.trim(), // ✅ Não corrige se já for URL válida
+        imagem: url.trim(),
         tempoExibicao: 10,
         ativo: true,
         ordem: popups.length
@@ -697,7 +576,6 @@ export default function PainelAdmin() {
       }}
     >
       <div className="absolute inset-0 bg-white/35 z-0"></div>
-      
       <header className="bg-white shadow-sm border-b sticky top-0 z-10">
         <div className="container mx-auto px-4 py-3">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -772,37 +650,29 @@ export default function PainelAdmin() {
           </div>
         </div>
       </header>
-
       <main className="container mx-auto px-4 py-6 relative z-10">
-        {/* ADICIONE ESTE DIV PARA ESPAÇAMENTO */}
-        <div className="mt-6"></div> {/* ← NOVA LINHA PARA ESPAÇO */}
-        
-        {/* Dashboard com MAIS MARGEM SUPERIOR */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 mt-10"> {/* ← mt-10 adicionado */}
-          
-          {/* Primeiro card - com ESPAÇAMENTO INTERNO MAIOR */}
-          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow"> {/* ← p-6 */}
+        <div className="mt-6"></div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 mt-10">
+          <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-500 font-medium">Carrossel Home</p>
-                <p className="text-2xl font-bold text-gray-800 mt-2"> {/* ← mt-2 */}
+                <p className="text-2xl font-bold text-gray-800 mt-2">
                   {fotosCarrossel.filter(item => item.ativo).length}
                   <span className="text-sm font-normal text-gray-500 ml-1">
                     / {fotosCarrossel.length}
                   </span>
                 </p>
-                <p className="text-xs text-gray-500 mt-2"> {/* ← mt-2 */}
+                <p className="text-xs text-gray-500 mt-2">
                   {fotosCarrossel.length === 0 ? 'Nenhuma imagem' : 
                    `${fotosCarrossel.filter(f => f.ativo).length} ativas`}
                 </p>
               </div>
               <div className="p-3 bg-blue-100 rounded-lg shadow-inner">
-                <Image className="text-blue-600" size={26} /> {/* ← size aumentado */}
+                <Image className="text-blue-600" size={26} />
               </div>
             </div>
           </div>
-          
-          {/* Segundo card com mesmo padrão */}
           <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -822,8 +692,6 @@ export default function PainelAdmin() {
               </div>
             </div>
           </div>
-          
-          {/* Terceiro card com mesmo padrão */}
           <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -843,8 +711,6 @@ export default function PainelAdmin() {
               </div>
             </div>
           </div>
-          
-          {/* Quarto card com mesmo padrão */}
           <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm p-6 border border-gray-200 hover:shadow-md transition-shadow">
             <div className="flex items-center justify-between">
               <div>
@@ -865,7 +731,6 @@ export default function PainelAdmin() {
             </div>
           </div>
         </div>
-
         <div className="mb-6 overflow-x-auto">
           <div className="flex gap-2 pb-2 min-w-max">
             {([
@@ -891,7 +756,6 @@ export default function PainelAdmin() {
             ))}
           </div>
         </div>
-
         <div className="bg-white/90 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-6">
           {/* CARROSSEL FOTOS */}
           {activeTab === 'carrossel-home' && (
@@ -932,7 +796,6 @@ export default function PainelAdmin() {
                           alt={item.titulo} 
                           className="w-full h-40 object-cover bg-gray-100"
                           onError={(e) => {
-                            // ✅ Só corrige se NÃO for Base64 e NÃO começar com /
                             if (!item.imagem.startsWith('data:image') && !item.imagem.startsWith('/')) {
                               const corrigida = corrigirUrlImagem(item.imagem);
                               (e.target as HTMLImageElement).src = corrigida;
@@ -1142,7 +1005,6 @@ export default function PainelAdmin() {
                                   alt={`${evento.periodo} ${idx}`} 
                                   className="w-full h-24 object-cover bg-gray-100"
                                   onError={(e) => {
-                                    // ✅ Só corrige se NÃO for Base64 e NÃO começar com /
                                     if (!imagem.startsWith('data:image') && !imagem.startsWith('/')) {
                                       const corrigida = corrigirUrlImagem(imagem);
                                       (e.target as HTMLImageElement).src = corrigida;
@@ -1477,7 +1339,6 @@ export default function PainelAdmin() {
             </div>
           )}
         </div>
-
         <div className="text-center mt-6">
           <button
             onClick={salvarEPublicar}

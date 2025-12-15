@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import Navigation from "../components/layout/Navigation";
 import Footer from "../components/layout/Footer";
 
-export default function SantoDoDiaCompleto() {
+export default function SantoDoDia() {
   const [santoDoDia, setSantoDoDia] = useState<any>(null);
   const [dataAtual, setDataAtual] = useState('');
   const [carregando, setCarregando] = useState(true);
@@ -312,37 +313,42 @@ export default function SantoDoDiaCompleto() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
+      <Navigation />
+
+      {/* 🔵 BANNER RESPONSIVO - IGUAL AOS MOMENTOS LITÚRGICOS E DOAÇÕES */}
+      <section className="relative w-full overflow-hidden bg-gray-900 mt-20">
+        <div className="relative h-[400px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
+          <img 
+            src="/santododia6.png"
+            alt="Santo do Dia"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            onError={(e) => {
+              const img = e.currentTarget;
+              img.onerror = null;
+              img.src = '/santododia.png';
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent" />
+          <div className="relative z-10 h-full flex flex-col items-center justify-center">
+            <div className="text-center px-4 max-w-4xl mx-auto">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-2 sm:mb-3 drop-shadow-lg">
+                Santo do Dia
+              </h1>
+              <p className="text-lg sm:text-xl md:text-2xl text-white/90 max-w-3xl mx-auto px-4 drop-shadow-md">
+                Descubra o Santo celebrado hoje na Igreja Católica
+              </p>
+            </div>
+          </div>
+        </div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-500"></div>
+      </section>
+
       {/* Conteúdo Principal */}
-      <div className="max-w-5xl mx-auto px-4 sm:px-5 md:px-6 pt-16 sm:pt-20 md:pt-24 pb-6 sm:pb-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-5 md:px-6 py-6 sm:py-8 md:py-12">
         <div className="space-y-5 sm:space-y-6 md:space-y-8">
           
-          {/* Santo do Dia - PERFEITAMENTE RESPONSIVO */}
+          {/* Card com informações do Santo do Dia */}
           <div className="bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-5 md:p-8 border border-blue-200">
-            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5 md:gap-6 mb-5 sm:mb-6 md:mb-8">
-              {/* IMAGEM GRANDE E BONITA */}
-              <div className="flex-shrink-0">
-                <img 
-                  src="/santododia2.png" 
-                  alt="Santo do Dia" 
-                  className="w-28 h-28 sm:w-32 sm:h-32 md:w-40 md:h-40 lg:w-48 lg:h-48 object-contain drop-shadow-lg"
-                  onError={(e) => {
-                    const img = e.currentTarget;
-                    img.onerror = null;
-                    img.src = '/santododia.png';
-                  }}
-                />
-              </div>
-              
-              <div className="text-center sm:text-left">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-blue-900 mb-2">
-                  Santo do Dia
-                </h2>
-                <p className="text-base sm:text-lg md:text-xl text-blue-700 font-medium">
-                  Descubra o santo celebrado hoje na Igreja Católica
-                </p>
-              </div>
-            </div>
-            
             {carregando ? (
               <div className="flex items-center justify-center h-32 sm:h-36 md:h-40">
                 <div className="text-center">
@@ -403,7 +409,7 @@ export default function SantoDoDiaCompleto() {
             ) : null}
           </div>
 
-          {/* Busca de Santos - RESPONSIVO */}
+          {/* Busca de Santos */}
           <div className="bg-white/95 backdrop-blur-sm rounded-xl sm:rounded-2xl shadow-lg sm:shadow-xl p-4 sm:p-5 md:p-8 border border-blue-200">
             <div className="flex items-center gap-4 sm:gap-5 md:gap-6 mb-5 sm:mb-6 md:mb-8">
               <div className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xl sm:text-2xl md:text-3xl shadow-lg">
@@ -498,7 +504,6 @@ export default function SantoDoDiaCompleto() {
         </div>
       </div>
 
-      {/* Footer */}
       <Footer />
     </div>
   );

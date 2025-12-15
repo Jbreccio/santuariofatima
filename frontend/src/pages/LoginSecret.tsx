@@ -63,7 +63,7 @@ export default function LoginSecret() {
             <div className="bg-gradient-to-b from-[#051f2c] to-[#2e8cb8] rounded-xl p-10 text-center shadow-2xl">
               {/* LOGO NO CENTRO DO BOTÃO */}
               <div className="flex justify-center mb-6">
-                <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/30 shadow-lg">
+                <div className="w-60 h-60 rounded-full overflow-hidden border-4 border-white/30 shadow-lg">
                   <img 
                     src="/logo.png" 
                     alt="Santuário de Fátima"
@@ -75,7 +75,7 @@ export default function LoginSecret() {
                 </div>
               </div>
               
-              <h1 className="text-2xl font-bold text-white mb-2">Santuário de Fátima</h1>
+              <h1 className="text-2xl font-bold text-white mb-2"></h1>
               <p className="text-white/80 text-sm mb-8">Acesso Administrativo</p>
               
               <button
@@ -83,7 +83,7 @@ export default function LoginSecret() {
                 className="flex items-center justify-center gap-3 bg-white text-[#051f2c] font-bold py-4 px-8 rounded-lg w-full hover:bg-gray-100 transition-colors text-lg shadow-lg hover:shadow-xl"
               >
                 <LogIn size={22} />
-                LOGIN ADMINISTRATIVO
+                LOGIN
               </button>
             </div>
             
@@ -91,7 +91,8 @@ export default function LoginSecret() {
               Área restrita à coordenação pastoral
             </p>
             <p className="text-center text-gray-400 text-xs mt-2">
-              Quatro camadas de segurança
+              Sistema Administrativo do Santuário<p></p>
+                Desenvolvido com fé e dedicação
             </p>
           </div>
         )}
@@ -194,7 +195,7 @@ export default function LoginSecret() {
                     type="submit"
                     className="w-full bg-white hover:bg-gray-100 text-blue-700 py-4 rounded-lg font-bold text-lg transition-colors shadow-lg hover:shadow-xl"
                   >
-                    Próxima Etapa →
+                    Próxima →
                   </button>
                 </>
               )}
@@ -306,18 +307,9 @@ export default function LoginSecret() {
               </p>
               <p className="text-white/70">— Nossa Senhora de Fátima, 13 de maio de 1917</p>
             </div>
-            <p className="text-white/60 mt-8 text-lg">Santuário Nossa Senhora de Fátima</p>
-          </div>
           
-          <div className="mt-12 pt-8 border-t border-white/20">
-            <p className="text-white/50 text-sm">
-              Sistema Administrativo do Santuário<br />
-              Desenvolvido com fé e dedicação
-            </p>
-            <div className="flex justify-center mt-4">
-              <div className="w-16 h-1 bg-white/30 rounded-full"></div>
-            </div>
           </div>
+               
         </div>
       </div>
     </div>

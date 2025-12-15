@@ -1,4 +1,4 @@
-// pages/MomentosLiturgicos.tsx
+// pages/MomentosLiturgicos.tsx — VERSÃO FINAL COM FALLBACK
 import React, { useState, useEffect } from 'react';
 import Navigation from "../components/layout/Navigation";
 import Footer from "../components/layout/Footer";
@@ -26,7 +26,53 @@ interface CarrosselItem {
   local: string;
 }
 
-const CarrosselCinzas = ({ slides }: { slides: CarrosselItem[] }) => {
+interface EventoLiturgico {
+  id: string;
+  periodo: string;
+  cor: string;
+  tituloFaixa: string;
+  imagens: string[];
+  ativo: boolean;
+}
+
+// ✅ FALLBACK EMBUTIDO (sempre disponível)
+const DADOS_INICIAIS: EventoLiturgico[] = [
+  {
+    id: 'cinzas-2025',
+    periodo: 'Cinzas',
+    cor: 'roxo',
+    tituloFaixa: 'CINZAS 2025',
+    imagens: ['/Cinzas1.png','/Cinzas02.png','/Cinzas03.png','/Cinzas4.png','/Cinzas5.png','/Cinzas6.png'],
+    ativo: true
+  },
+  {
+    id: 'jubileu-2025',
+    periodo: 'Jubileu',
+    cor: 'amarelo',
+    tituloFaixa: 'ANO JUBILAR 2025',
+    imagens: ['/Jubileo.png','/Jubileo2.png','/Jubileo3.png','/Jubileo4.png','/Jubileo5.png','/Jubileo6.png'],
+    ativo: true
+  },
+  {
+    id: 'ramos-2025',
+    periodo: 'Domingo de Ramos',
+    cor: 'vermelho',
+    tituloFaixa: 'DOMINGO DE RAMOS 2025',
+    imagens: ['/altarfrente.png','/snsf.png','/ramos01.png','/ramos02.png','/ramos03.png','/ramos04.png','/ramos05.png'],
+    ativo: true
+  }
+];
+
+// ✅ CARROSSEL GENÉRICO
+const CarrosselGenerico = ({ 
+  slides, 
+  titulo, 
+  cor 
+}: { 
+  slides: { imagem: string; titulo?: string }[];
+  titulo: string;
+  cor: string;
+}) => {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   useEffect(() => {
@@ -41,301 +87,45 @@ const CarrosselCinzas = ({ slides }: { slides: CarrosselItem[] }) => {
   const nextSlide = () => setCurrentSlide(prev => (prev + 1) % slides.length);
   const prevSlide = () => setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
 
-  if (slides.length === 0) {
-    return (
-      <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
-        <div className="relative h-[300px] overflow-hidden flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-500">Nenhuma imagem disponível</p>
-            <p className="text-sm text-gray-400 mt-1">Adicione imagens pelo Painel Admin</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (slides.length === 0) return null;
 
-  return (
-    <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
-      <div className="relative h-[300px] overflow-hidden">
-        {slides.map((slide, index) => (
-          <div
-            key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <div className="relative w-full h-full">
-              <div 
-                className="absolute inset-0 bg-cover bg-center blur-sm scale-105"
-                style={{ backgroundImage: `url(${slide.imagem})` }}
-              />
-              <img
-                src={slide.imagem}
-                alt={slide.titulo || 'Imagem Cinzas'}
-                className="absolute inset-0 w-full h-full object-contain p-4"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    parent.innerHTML = `
-                      <div class="w-full h-full flex items-center justify-center bg-gray-100">
-                        <div class="text-center">
-                          <p class="text-gray-500">Imagem não encontrada</p>
-                          <p class="text-sm text-gray-400">${slide.imagem}</p>
-                        </div>
-                      </div>
-                    `;
-                  }
-                }}
-              />
-              {slide.titulo && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <h3 className="text-white font-semibold text-center">{slide.titulo}</h3>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {slides.length > 1 && (
-          <>
-            <button
-              onClick={prevSlide}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </>
-        )}
-
-        {slides.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlide(idx)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const CarrosselJubileo = ({ slides }: { slides: CarrosselItem[] }) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    if (slides.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentSlide(prev => (prev + 1) % slides.length);
-      }, 5000);
-      return () => clearInterval(interval);
+  const getCorGradiente = (cor: string) => {
+    switch (cor) {
+      case 'roxo': return 'from-purple-900 to-purple-700';
+      case 'amarelo': return 'from-amber-600 to-orange-600';
+      case 'vermelho': return 'from-red-700 to-red-900';
+      case 'verde': return 'from-green-600 to-emerald-600';
+      case 'branco': return 'from-gray-100 to-gray-300';
+      case 'rosa': return 'from-pink-600 to-rose-700';
+      default: return 'from-gray-700 to-gray-900';
     }
-  }, [slides.length]);
-
-  const nextSlide = () => setCurrentSlide(prev => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
-
-  if (slides.length === 0) {
-    return (
-      <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
-        <div className="relative h-[300px] overflow-hidden flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-500">Nenhuma imagem disponível</p>
-            <p className="text-sm text-gray-400 mt-1">Adicione imagens pelo Painel Admin</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  };
 
   return (
     <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
       <div className="relative h-[300px] overflow-hidden">
         {slides.map((slide, index) => (
-          <div
-            key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
+          <div key={index} className={`absolute inset-0 transition-opacity duration-500 ${index === currentSlide ? 'opacity-100' : 'opacity-0'}`}>
             <div className="relative w-full h-full">
-              <div 
-                className="absolute inset-0 bg-cover bg-center blur-sm scale-105"
-                style={{ backgroundImage: `url(${slide.imagem})` }}
-              />
-              <img
-                src={slide.imagem}
-                alt={slide.titulo || 'Imagem Jubileu'}
-                className="absolute inset-0 w-full h-full object-contain p-4"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    parent.innerHTML = `
-                      <div class="w-full h-full flex items-center justify-center bg-gray-100">
-                        <div class="text-center">
-                          <p class="text-gray-500">Imagem não encontrada</p>
-                          <p class="text-sm text-gray-400">${slide.imagem}</p>
-                        </div>
-                      </div>
-                    `;
-                  }
-                }}
-              />
-              {slide.titulo && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <h3 className="text-white font-semibold text-center">{slide.titulo}</h3>
-                </div>
-              )}
+              <div className="absolute inset-0 bg-cover bg-center blur-sm scale-105" style={{ backgroundImage: `url(${slide.imagem})` }} />
+              <img src={slide.imagem} alt={slide.titulo || titulo} className="absolute inset-0 w-full h-full object-contain p-4" />
             </div>
           </div>
         ))}
-
         {slides.length > 1 && (
           <>
-            <button
-              onClick={prevSlide}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-            >
+            <button onClick={prevSlide} className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm">
               <ChevronLeft size={20} />
             </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-            >
+            <button onClick={nextSlide} className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm">
               <ChevronRight size={20} />
             </button>
           </>
         )}
-
         {slides.length > 1 && (
           <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
             {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlide(idx)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'
-                }`}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-};
-
-const CarrosselDomingoRamos = ({ slides }: { slides: CarrosselItem[] }) => {
-  const [currentSlide, setCurrentSlide] = useState(0);
-
-  useEffect(() => {
-    if (slides.length > 1) {
-      const interval = setInterval(() => {
-        setCurrentSlide(prev => (prev + 1) % slides.length);
-      }, 5000);
-      return () => clearInterval(interval);
-    }
-  }, [slides.length]);
-
-  const nextSlide = () => setCurrentSlide(prev => (prev + 1) % slides.length);
-  const prevSlide = () => setCurrentSlide(prev => (prev - 1 + slides.length) % slides.length);
-
-  if (slides.length === 0) {
-    return (
-      <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
-        <div className="relative h-[300px] overflow-hidden flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-gray-500">Nenhuma imagem disponível</p>
-            <p className="text-sm text-gray-400 mt-1">Adicione imagens pelo Painel Admin</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="relative overflow-hidden rounded-xl shadow-lg bg-white">
-      <div className="relative h-[300px] overflow-hidden">
-        {slides.map((slide, index) => (
-          <div
-            key={slide.id}
-            className={`absolute inset-0 transition-opacity duration-500 ease-in-out ${
-              index === currentSlide ? 'opacity-100' : 'opacity-0'
-            }`}
-          >
-            <div className="relative w-full h-full">
-              <div 
-                className="absolute inset-0 bg-cover bg-center blur-sm scale-105"
-                style={{ backgroundImage: `url(${slide.imagem})` }}
-              />
-              <img
-                src={slide.imagem}
-                alt={slide.titulo || 'Imagem Domingo de Ramos'}
-                className="absolute inset-0 w-full h-full object-contain p-4"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                  const parent = e.currentTarget.parentElement;
-                  if (parent) {
-                    parent.innerHTML = `
-                      <div class="w-full h-full flex items-center justify-center bg-gray-100">
-                        <div class="text-center">
-                          <p class="text-gray-500">Imagem não encontrada</p>
-                          <p class="text-sm text-gray-400">${slide.imagem}</p>
-                        </div>
-                      </div>
-                    `;
-                  }
-                }}
-              />
-              {slide.titulo && (
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <h3 className="text-white font-semibold text-center">{slide.titulo}</h3>
-                </div>
-              )}
-            </div>
-          </div>
-        ))}
-
-        {slides.length > 1 && (
-          <>
-            <button
-              onClick={prevSlide}
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-            >
-              <ChevronLeft size={20} />
-            </button>
-            <button
-              onClick={nextSlide}
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full w-8 h-8 flex items-center justify-center backdrop-blur-sm"
-            >
-              <ChevronRight size={20} />
-            </button>
-          </>
-        )}
-
-        {slides.length > 1 && (
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-            {slides.map((_, idx) => (
-              <button
-                key={idx}
-                onClick={() => setCurrentSlide(idx)}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'
-                }`}
-              />
+              <button key={idx} onClick={() => setCurrentSlide(idx)} className={`w-2 h-2 rounded-full transition-all ${idx === currentSlide ? 'bg-white w-6' : 'bg-white/50 hover:bg-white/80'}`} />
             ))}
           </div>
         )}
@@ -347,73 +137,30 @@ const CarrosselDomingoRamos = ({ slides }: { slides: CarrosselItem[] }) => {
 export default function MomentosLiturgicos() {
   const [recados, setRecados] = useState<Recado[]>([]);
   const [eventos, setEventos] = useState<Recado[]>([]);
-  const [carrosselCinzas, setCarrosselCinzas] = useState<CarrosselItem[]>([]);
-  const [carrosselJubileu, setCarrosselJubileu] = useState<CarrosselItem[]>([]);
-  const [carrosselDomingoRamos, setCarrosselDomingoRamos] = useState<CarrosselItem[]>([]);
+  const [momentosLiturgicos, setMomentosLiturgicos] = useState<EventoLiturgico[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ✅ CARREGA DADOS DO LOCALSTORAGE CORRETO
   useEffect(() => {
     const carregarDados = () => {
       try {
         const dados = localStorage.getItem('santuario-dados');
         if (dados) {
           const { momentosLiturgicos = [], recados: recadosSalvos = [], eventos: eventosSalvos = [] } = JSON.parse(dados);
-
-          // Processa Cinzas
-          const cinzas = momentosLiturgicos.find(m => 
-            m.periodo.toLowerCase().includes('cinzas') || 
-            m.tituloFaixa.toLowerCase().includes('cinzas')
-          );
-          if (cinzas && cinzas.ativo) {
-            setCarrosselCinzas(cinzas.imagens.map((img, i) => ({
-              id: `cinzas-${i}`,
-              imagem: img,
-              titulo: cinzas.tituloFaixa,
-              ordem: i,
-              ativo: true,
-              local: 'eventos-cinzas'
-            })));
-          }
-
-          // Processa Jubileu
-          const jubileu = momentosLiturgicos.find(m => 
-            m.periodo.toLowerCase().includes('jubileu') || 
-            m.tituloFaixa.toLowerCase().includes('jubileu') ||
-            m.tituloFaixa.toLowerCase().includes('jubilar')
-          );
-          if (jubileu && jubileu.ativo) {
-            setCarrosselJubileu(jubileu.imagens.map((img, i) => ({
-              id: `jubileu-${i}`,
-              imagem: img,
-              titulo: jubileu.tituloFaixa,
-              ordem: i,
-              ativo: true,
-              local: 'eventos-jubileu'
-            })));
-          }
-
-          // Processa Domingo de Ramos
-          const ramos = momentosLiturgicos.find(m => 
-            m.periodo.toLowerCase().includes('ramos') || 
-            m.tituloFaixa.toLowerCase().includes('ramos')
-          );
-          if (ramos && ramos.ativo) {
-            setCarrosselDomingoRamos(ramos.imagens.map((img, i) => ({
-              id: `ramos-${i}`,
-              imagem: img,
-              titulo: ramos.tituloFaixa,
-              ordem: i,
-              ativo: true,
-              local: 'eventos-ramos'
-            })));
-          }
-
+          setMomentosLiturgicos(momentosLiturgicos.filter((m: any) => m.ativo));
           setRecados(recadosSalvos.filter((r: any) => r.ativo));
           setEventos(eventosSalvos?.filter((e: any) => e.ativo) || []);
+        } else {
+          // ✅ USAR FALLBACK SE NÃO HOUVER DADOS
+          setMomentosLiturgicos(DADOS_INICIAIS);
+          setRecados([]);
+          setEventos([]);
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
+        // ✅ EM CASO DE ERRO, USAR FALLBACK
+        setMomentosLiturgicos(DADOS_INICIAIS);
+        setRecados([]);
+        setEventos([]);
       } finally {
         setLoading(false);
       }
@@ -421,7 +168,7 @@ export default function MomentosLiturgicos() {
 
     carregarDados();
 
-    // ✅ ESCUTA ATUALIZAÇÕES EM TEMPO REAL
+    // ✅ ESCUTAR ATUALIZAÇÕES DO PainelAdmin
     const aoAtualizar = () => carregarDados();
     window.addEventListener('dadosAtualizados', aoAtualizar);
     return () => window.removeEventListener('dadosAtualizados', aoAtualizar);
@@ -445,15 +192,9 @@ export default function MomentosLiturgicos() {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-gray-50 to-blue-50">
       <Navigation />
-      
-      {/* BANNER */}
       <section className="relative w-full overflow-hidden bg-gray-900 mt-20">
         <div className="relative h-[500px] sm:h-[500px] md:h-[500px] lg:h-[750px] overflow-hidden">
-          <img 
-            src="/BannerML.png"
-            alt="Momentos Litúrgicos"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+          <img src="/BannerML.png" alt="Momentos Litúrgicos" className="absolute inset-0 w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent" />
           <div className="relative z-10 h-full flex flex-col items-center justify-center">
             <div className="text-center px-4 max-w-4xl mx-auto">
@@ -470,51 +211,27 @@ export default function MomentosLiturgicos() {
       </section>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
-        {/* CINZAS */}
-        <section className="mb-12">
-          <div className="mb-6">
-            <div className="bg-gradient-to-r from-purple-900 to-purple-700 rounded-xl p-6 shadow-lg">
-              <h1 className="text-3xl font-bold text-white mb-1">CINZAS 2025</h1>
-              <p className="text-lg text-purple-100">
-                Tempo de conversão, oração e penitência. Prepare-se para a Quaresma.
-              </p>
+        {/* RENDERIZAÇÃO DINÂMICA DE TODOS OS MOMENTOS */}
+        {momentosLiturgicos.map((momento) => (
+          <section key={momento.id} className="mb-12">
+            <div className="mb-6">
+              <div className={`bg-gradient-to-r ${momento.cor === 'roxo' ? 'from-purple-900 to-purple-700' : momento.cor === 'amarelo' ? 'from-amber-600 to-orange-600' : momento.cor === 'vermelho' ? 'from-red-700 to-red-900' : 'from-gray-700 to-gray-900'} rounded-xl p-6 shadow-lg`}>
+                <h1 className="text-3xl font-bold text-white mb-1">{momento.tituloFaixa}</h1>
+                <p className="text-lg text-white/90">{momento.periodo}</p>
+              </div>
             </div>
-          </div>
-          <CarrosselCinzas slides={carrosselCinzas} />
-        </section>
-
-        {/* JUBILEU */}
-        <section className="mb-12">
-          <div className="mb-6">
-            <div className="bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl p-6 shadow-lg">
-              <h1 className="text-3xl font-bold text-white mb-1">ANO JUBILAR 2025</h1>
-              <p className="text-lg text-amber-100">
-                Ano de graça, perdão e renovação espiritual. Viva esta experiência de fé conosco.
-              </p>
-            </div>
-          </div>
-          <CarrosselJubileo slides={carrosselJubileu} />
-        </section>
-
-        {/* DOMINGO DE RAMOS */}
-        <section className="mb-12">
-          <div className="mb-6">
-            <div className="bg-gradient-to-r from-red-700 to-red-900 rounded-xl p-6 shadow-lg">
-              <h1 className="text-3xl font-bold text-white mb-1">DOMINGO DE RAMOS 2025</h1>
-              <p className="text-lg text-red-100">
-                Celebração da entrada triunfal de Jesus em Jerusalém. Início da Semana Santa.
-              </p>
-            </div>
-          </div>
-          <CarrosselDomingoRamos slides={carrosselDomingoRamos} />
-        </section>
+            <CarrosselGenerico
+              slides={momento.imagens.map(img => ({ imagem: img, titulo: momento.tituloFaixa }))}
+              titulo={momento.tituloFaixa}
+              cor={momento.cor}
+            />
+          </section>
+        ))}
 
         {/* EVENTOS */}
         <section className="mb-12">
           <h2 className="text-2xl font-bold mb-4 text-gray-900">Próximos Eventos</h2>
-          <p className="text-lg text-gray-600 mb-6">
-            Confira os próximos eventos e celebrações de nossa paróquia
-          </p>
+          <p className="text-lg text-gray-600 mb-6">Confira os próximos eventos e celebrações de nossa paróquia</p>
           {eventos.length === 0 ? (
             <div className="text-center py-8 bg-white rounded-lg border-2 border-dashed border-gray-300">
               <p className="text-gray-500">Nenhum evento cadastrado no momento</p>
@@ -522,10 +239,7 @@ export default function MomentosLiturgicos() {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {eventos.map((evento) => (
-                <div
-                  key={evento.id}
-                  className="bg-white rounded-lg shadow-md p-5 border-l-4 border-blue-600 hover:shadow-lg transition-shadow duration-300"
-                >
+                <div key={evento.id} className="bg-white rounded-lg shadow-md p-5 border-l-4 border-blue-600 hover:shadow-lg transition-shadow duration-300">
                   <h2 className="text-xl font-bold text-gray-900 mb-3">{evento.titulo}</h2>
                   <div className="space-y-2 mb-3">
                     {evento.data && (
@@ -550,11 +264,7 @@ export default function MomentosLiturgicos() {
                   <p className="text-gray-700 text-sm">{evento.conteudo}</p>
                   {evento.imagem && (
                     <div className="mt-3">
-                      <img 
-                        src={evento.imagem} 
-                        alt={evento.titulo}
-                        className="w-full h-40 object-cover rounded-md"
-                      />
+                      <img src={evento.imagem} alt={evento.titulo} className="w-full h-40 object-cover rounded-md" />
                     </div>
                   )}
                 </div>
@@ -581,11 +291,7 @@ export default function MomentosLiturgicos() {
                   <p className="text-gray-700 text-sm">{recado.conteudo}</p>
                   {recado.imagem && (
                     <div className="mt-3">
-                      <img 
-                        src={recado.imagem} 
-                        alt={recado.titulo}
-                        className="w-full h-40 object-cover rounded-md"
-                      />
+                      <img src={recado.imagem} alt={recado.titulo} className="w-full h-40 object-cover rounded-md" />
                     </div>
                   )}
                 </div>
@@ -594,7 +300,6 @@ export default function MomentosLiturgicos() {
           )}
         </section>
       </main>
-
       <Footer />
     </div>
   );

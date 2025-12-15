@@ -1,0 +1,22 @@
+// YouTube - Mock
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  
+  res.json({
+    success: true,
+    source: "mock",
+    data: [
+      {
+        id: { videoId: "demo_001" },
+        snippet: {
+          title: "Missa Dominical - Santuário Fátima (Demo)",
+          description: "Sistema em versão demonstrativa",
+          thumbnails: {
+            medium: { url: "https://img.youtube.com/vi/dQw4w9WgXcQ/mqdefault.jpg" }
+          }
+        }
+      }
+    ],
+    timestamp: new Date().toISOString()
+  });
+}

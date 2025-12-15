@@ -1,0 +1,17 @@
+// Facebook - Mock
+export default async function handler(req, res) {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  
+  res.json({
+    success: true,
+    source: "mock",
+    data: [
+      {
+        id: "fb_demo_001",
+        message: "📢 SISTEMA EM FASE DE TESTES\n\nEsta é a versão demonstrativa.\nSexta-feira: sistema completo na Hostinger!",
+        created_time: new Date().toISOString()
+      }
+    ],
+    timestamp: new Date().toISOString()
+  });
+}

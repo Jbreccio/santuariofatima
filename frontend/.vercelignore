@@ -1,0 +1,7 @@
+# frontend/.vercelignore
+node_modules
+dist  # ⚠️ IMPORTANTE: O Vercel vai gerar sua própria dist
+.env.local
+.env.*.local
+*.log
+.DS_Store
