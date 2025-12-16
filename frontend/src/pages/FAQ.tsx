@@ -1,4 +1,3 @@
-// frontend/src/pages/FAQ.tsx - VERSÃO COM ÍCONES GARANTIDOS
 import React, { useState } from 'react';
 import { 
   HelpCircle, 
