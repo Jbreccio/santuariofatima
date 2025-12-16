@@ -15,7 +15,7 @@ import SobreNos from "../pages/SobreNos";
 import Doacoes from "../pages/Doacoes";
 import Pastorais from "../pages/Pastorais";
 import CalendarioLiturgico from "../pages/CalendarioLiturgico";
-import Faq from "../pages/Faq";
+import FAQ from "../pages/FAQ";
 import TermosdeUso from "../pages/TermosdeUso";
 import PoliticadePrivacidade from "../pages/PoliticadePrivacidade";
 import LoginSecret from "../pages/LoginSecret";
@@ -48,7 +48,7 @@ export default function AppRoutes() {
         <Route path="/santo-do-dia" element={<SantoDoDia />} />
         
         {/* ROTAS SECUNDÁRIAS */}
-        <Route path="/faq" element={<Faq />} />
+        <Route path="/faq" element={<FAQ />} />
         <Route path="/termosdeuso" element={<TermosdeUso />} />
         <Route path="/politicadeprivacidade" element={<PoliticadePrivacidade />} />
         <Route path="/loginsecret" element={<LoginSecret />} />

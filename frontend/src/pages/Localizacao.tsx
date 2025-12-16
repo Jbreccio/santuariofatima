@@ -12,7 +12,7 @@ export default function Localizacao() {
       <section className="relative w-full overflow-hidden bg-gray-900 mt-20">
         <div className="relative h-[400px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
           <img 
-            src="/images/carrosselFotos/Aerea.png"
+            src="/images/carrosselFotos/vistadecima.png"
             alt="Localização do Santuário"
             className="absolute inset-0 w-full h-full object-cover object-center"
             onError={(e) => {

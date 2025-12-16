@@ -17,7 +17,7 @@ const DADOS_FIXOS: Slide[] = [
   { id: 'cruzNovo', imagem: '/images/carrosselFotos/cruzNovo.png', titulo: 'Cruz Nova' },
   { id: 'cruzNovo2', imagem: '/images/carrosselFotos/cruzNovo2.png', titulo: 'Cruz Nova 2' },
   { id: 'rosto', imagem: '/images/carrosselFotos/Rosto.png', titulo: 'Rosto' },
-  { id: 'aerea', imagem: '/images/carrosselFotos/Aerea.png', titulo: 'Aerea' },
+  { id: 'vistadecima', imagem: '/images/carrosselFotos/vistadecima.png', titulo: 'vistadecima' },
   { id: 'entradaNovo2', imagem: '/images/carrosselFotos/entradaNovo2.png', titulo: 'Entrada Nova 2' },
   { id: 'entradaNovo', imagem: '/images/carrosselFotos/entradaNovo.png', titulo: 'Entrada Nova' },
   { id: 'fachada1', imagem: '/images/carrosselFotos/fachada1.png', titulo: 'Fachada 1' },
