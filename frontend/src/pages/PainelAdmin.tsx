@@ -278,10 +278,24 @@ export default function PainelAdmin() {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
-    navigate('/loginsecret');
-  };
+  // 1. Limpa TODOS os dados de autenticação do localStorage
+  localStorage.removeItem('admin_token');
+  localStorage.removeItem('admin_user');
+  localStorage.removeItem('userRole'); // Se tiver
+  localStorage.removeItem('auth_expiry'); // Se tiver
+
+  // 2. (OPCIONAL) Limpa cookies se estiver usando
+  // document.cookie = "admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+
+  // 3. Redireciona para a página de login
+  navigate('/loginsecret');
+  
+  // 4. (OPCIONAL) Força um refresh completo para limpar qualquer estado da aplicação
+  // window.location.href = '/loginsecret';
+  
+  console.log('✅ Usuário deslogado com sucesso');
+
+};
 
   const handleExportarDados = () => {
     const dados = {
@@ -1344,23 +1358,37 @@ export default function PainelAdmin() {
             onClick={salvarEPublicar}
             disabled={saveStatus === 'saving'}
             className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-bold hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg disabled:opacity-70"
-          >
+           >
             {saveStatus === 'saving' ? (
-              <>
-                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                Publicando...
-              </>
-            ) : (
-              <>
-                <Globe size={22} />
-                Salvar Alterações e Publicar
-              </>
-            )}
-          </button>
-          <p className="text-sm text-gray-600 mt-2">
-            As alterações aparecerão no site imediatamente
-          </p>
-        </div>
+      <>
+        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+        Publicando...
+      </>
+    ) : (
+      <>
+        <Globe size={22} />
+        Salvar Alterações e Publicar
+      </>
+    )}
+  </button>
+  <p className="text-sm text-gray-600 mt-2">
+    As alterações aparecerão no site imediatamente
+  </p>
+  
+  {/* === BOTÃO DE LOGOUT ADICIONADO AQUI === */}
+  <div className="mt-6 pt-4 border-t border-gray-200">
+    <button
+      onClick={handleLogout}
+      className="inline-flex items-center gap-2 px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors shadow"
+    >
+      <LogOut size={18} />
+      Sair do Sistema Administrativo
+    </button>
+    <p className="text-xs text-gray-500 mt-1">
+      Esta ação limpará sua sessão e redirecionará para o login
+    </p>
+  </div>
+</div>
       </main>
 
       {previewPopup && (

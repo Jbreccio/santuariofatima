@@ -1,6 +1,195 @@
+// src/pages/SantoDoDia.tsx
 import React, { useState, useEffect } from 'react';
 import Navigation from "../components/layout/Navigation";
 import Footer from "../components/layout/Footer";
+
+// ✅ DADOS COMPLETOS DE SANTOS (expanda conforme necessário)
+const SANTOS_COMPLETOS: Record<string, any> = {
+  // Dezembro
+  '01-12': {
+    nome: 'Santo Elói',
+    descricao: 'Padroeiro dos ourives e ferreiros',
+    historia: `Bispo de Noyon, conhecido por sua habilidade como ourives e por sua caridade. 
+      Foi conselheiro do rei Dagoberto I e fundou vários mosteiros. 
+      Nasceu em 588 em Chaptelat, França, e morreu em 660.`,
+    imagem: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Saint_Eloi.jpg/800px-Saint_Eloi.jpg'
+  },
+  '02-12': {
+    nome: 'Beata Maria Ângela Astorch',
+    descricao: 'Mística e abadessa clarissa',
+    historia: `Religiosa espanhola conhecida por suas experiências místicas e vida de oração. 
+      Foi abadessa do convento de Murcia e destacou-se por sua espiritualidade profunda. 
+      Nasceu em 1592 e morreu em 1665.`,
+    imagem: null
+  },
+  '03-12': {
+    nome: 'São Francisco Xavier',
+    descricao: 'Padroeiro das Missões',
+    historia: `Missionário jesuíta que evangelizou a Ásia no século XVI. 
+      Co-fundador da Companhia de Jesus, levou o Evangelho à Índia, Japão e outras regiões asiáticas. 
+      É considerado um dos maiores missionários da história da Igreja.`,
+    imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/11/27/2019-11-27-s-francesco-saverio/1574831488912.jpg'
+  },
+  '04-12': {
+    nome: 'São João Damasceno',
+    descricao: 'Doutor da Igreja',
+    historia: `Teólogo e poeta siríaco, defensor do culto às imagens sagradas. 
+      Escreveu importantes obras teológicas e é considerado o último dos Padres gregos. 
+      Nasceu em 675 e morreu em 749.`,
+    imagem: null
+  },
+  '05-12': {
+    nome: 'São Sabas',
+    descricao: 'Abade e fundador de mosteiros',
+    historia: `Fundador do mosteiro de Mar Saba na Palestina, importante figura do monaquismo cristão. 
+      Organizou a vida monástica na Terra Santa e escreveu regras para os monges.`,
+    imagem: null
+  },
+  '06-12': {
+    nome: 'São Nicolau',
+    descricao: 'Bispo de Mira, inspiração do Papai Noel',
+    historia: `Bispo grego do século IV conhecido por sua generosidade e milagres. 
+      Padroeiro das crianças, marinheiros e comerciantes. 
+      Sua festa é celebrada em 6 de dezembro em muitos países europeus.`,
+    imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/12/06/2019-12-06-s-nicola-di-bari/1575638335837.JPG'
+  },
+  '07-12': {
+    nome: 'Santo Ambrósio',
+    descricao: 'Doutor da Igreja, bispo de Milão',
+    historia: `Um dos quatro grandes Doutores da Igreja latina, influente teólogo e bispo. 
+      Batizou Santo Agostinho e defendeu a ortodoxia contra heresias. 
+      Nasceu em 340 e morreu em 397.`,
+    imagem: null
+  },
+  '08-12': {
+    nome: 'Imaculada Conceição',
+    descricao: 'Dogma mariano',
+    historia: `Celebração do dogma que declara Maria concebida sem pecado original. 
+      Proclamado pelo Papa Pio IX em 1854. 
+      Padroeira de Portugal e de várias dioceses ao redor do mundo.`,
+    imagem: null
+  },
+  '09-12': {
+    nome: 'São Juan Diego',
+    descricao: 'Vidente de Nossa Senhora de Guadalupe',
+    historia: `Indígena mexicano que testemunhou as aparições de Nossa Senhora em 1531. 
+      Sua tilma com a imagem de Nossa Senhora é venerada na Basílica de Guadalupe. 
+      Canonizado em 2002 pelo Papa João Paulo II.`,
+    imagem: null
+  },
+  '10-12': {
+    nome: 'Nossa Senhora de Loreto',
+    descricao: 'Padroeira dos aviadores',
+    historia: `Devoção mariana associada à Santa Casa de Nazaré, que segundo a tradição foi transportada por anjos até Loreto, Itália. 
+      A Santa Casa é considerada o lar onde a Sagrada Família viveu.`,
+    imagem: null
+  },
+  '11-12': {
+    nome: 'São Dâmaso I',
+    descricao: 'Papa do século IV',
+    historia: `Papa que combateu heresias e promoveu a liturgia romana. 
+      Encomendou a tradução da Bíblia para o latim (Vulgata) a São Jerônimo. 
+      Nasceu em 305 e morreu em 384.`,
+    imagem: null
+  },
+  '12-12': {
+    nome: 'Nossa Senhora de Guadalupe',
+    descricao: 'Padroeira das Américas',
+    historia: `Aparições marianas no México em 1531 a São Juan Diego. 
+      A imagem milagrosa na tilma é um símbolo importante da evangelização das Américas. 
+      Sua festa é celebrada em 12 de dezembro.`,
+    imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/12/12/2019-12-12-nostra-signora-di-guadalupe/1576145367638.JPG'
+  },
+  '13-12': {
+    nome: 'Santa Luzia',
+    descricao: 'Virgem e mártir',
+    historia: `Mártir siciliana do século IV, padroeira da visão e dos cegos. 
+      Seu nome significa "luz" e é invocada contra doenças oculares. 
+      Foi martirizada durante a perseguição do imperador Diocleciano.`,
+    imagem: null
+  },
+  '14-12': {
+    nome: 'São João da Cruz',
+    descricao: 'Doutor da Igreja, místico',
+    historia: `Reformador carmelita, poeta místico espanhol do século XVI. 
+      Co-fundador dos Carmelitas Descalços com Santa Teresa de Ávila. 
+      É considerado um dos maiores poetas místicos da literatura espanhola.`,
+    imagem: null
+  },
+  '15-12': {
+    nome: 'Santa Maria di Rosa',
+    descricao: 'Fundadora das Servas da Caridade',
+    historia: `Religiosa italiana que dedicou sua vida ao cuidado dos doentes e necessitados, especialmente durante epidemias. 
+      Fundou a Congregação das Servas da Caridade em 1839.`,
+    imagem: null
+  },
+  '25-12': {
+    nome: 'Natal do Senhor',
+    descricao: 'Nascimento de Jesus Cristo',
+    historia: `Celebração do nascimento de Jesus Cristo em Belém. 
+      A festa mais importante do calendário cristão, celebra a Encarnação do Verbo de Deus. 
+      É celebrada em 25 de dezembro em todo o mundo.`,
+    imagem: null
+  },
+
+  // Outros meses (adicione conforme necessário)
+  '30-11': {
+    nome: 'Santo André, Apóstolo',
+    descricao: 'Irmão de São Pedro',
+    historia: `Um dos doze apóstolos, pregou na Grécia e foi martirizado em cruz em forma de X. 
+      Padroeiro da Escócia, Grécia e Rússia.`,
+    imagem: 'https://www.vaticannews.va/content/dam/vaticannews/multimedia/2020/11/30/2020-11-30-santo-andrea/jcr:content/renditions/cq5dam.thumbnail.cropped.750.422.jpeg'
+  },
+  '04-10': {
+    nome: 'São Francisco de Assis',
+    descricao: 'Fundador dos Franciscanos',
+    historia: `Renunciou à riqueza para viver em pobreza, amante da natureza e dos animais. 
+      Recebeu os estigmas e é um dos santos mais populares da Igreja.`,
+    imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/10/04/2019-10-04-s-francesco-d-assisi/1570205197236.jpg'
+  },
+  '13-06': {
+    nome: 'Santo Antônio de Pádua',
+    descricao: 'Doutor da Igreja',
+    historia: `Pregador franciscano português, conhecido como "santo dos milagres". 
+      Doutor da Igreja e padroeiro dos objetos perdidos.`,
+    imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/06/13/2019-06-13-s-antonio-da-padova/1560428267794.jpg'
+  },
+  '13-05': {
+    nome: 'Nossa Senhora de Fátima',
+    descricao: 'Aparições em Fátima',
+    historia: `Aparições de Nossa Senhora a três pastorinhos em Fátima, Portugal, em 1917. 
+      Mensagens de oração, penitência e conversão.`,
+    imagem: null
+  },
+  '23-04': {
+    nome: 'São Jorge',
+    descricao: 'Mártir e guerreiro',
+    historia: `Soldado romano martirizado por sua fé cristã. 
+      Padroeiro da Inglaterra, Portugal e dos escoteiros. 
+      Conhecido pela lenda do dragão.`,
+    imagem: null
+  },
+  '05-09': {
+    nome: 'Santa Teresa de Calcutá',
+    descricao: 'Missionária da Caridade',
+    historia: `Fundadora das Missionárias da Caridade, dedicou sua vida aos mais pobres entre os pobres em Calcutá, Índia. 
+      Prêmio Nobel da Paz em 1979.`,
+    imagem: null
+  },
+  '22-10': {
+    nome: 'São João Paulo II',
+    descricao: 'Papa peregrino',
+    historia: `Pontificado de 27 anos, viajou por todo o mundo promovendo a paz e a dignidade humana. 
+      Canonizado em 2014.`,
+    imagem: null
+  }
+};
+
+// ✅ Lista de todos os santos para busca por nome
+const TODOS_SANTOS = Object.entries(SANTOS_COMPLETOS).map(([data, santo]) => ({
+  ...santo,
+  data // formato "dd-mm"
+}));
 
 export default function SantoDoDia() {
   const [santoDoDia, setSantoDoDia] = useState<any>(null);
@@ -10,236 +199,65 @@ export default function SantoDoDia() {
   const [santoEncontrado, setSantoEncontrado] = useState<any>(null);
   const [dataSelecionada, setDataSelecionada] = useState('');
   const [buscando, setBuscando] = useState(false);
+  const [mesSelecionado, setMesSelecionado] = useState(new Date().getMonth() + 1); // mês atual
 
-  const todosSantos = [
-    { nome: 'São Francisco de Assis', data: '04-10', descricao: 'Fundador da Ordem Franciscana', historia: 'Giovanni di Pietro di Bernardone, conhecido como São Francisco de Assis, foi um frade católico da Itália.' },
-    { nome: 'Santo Antônio', data: '13-06', descricao: 'Doutor da Igreja, padroeiro dos pobres', historia: 'Santo Antônio de Pádua foi um frade franciscano português. Conhecido como o "santo dos milagres".' },
-    { nome: 'Santa Teresa de Calcutá', data: '05-09', descricao: 'Missionária da caridade', historia: 'Madre Teresa de Calcutá foi uma religiosa católica albanesa, fundadora das Missionárias da Caridade.' },
-    { nome: 'São João Paulo II', data: '22-10', descricao: 'Papa peregrino', historia: 'Karol Józef Wojtyła, conhecido como São João Paulo II, foi o papa e líder mundial da Igreja Católica.' },
-    { nome: 'Nossa Senhora de Fátima', data: '13-05', descricao: 'Aparições em Fátima, Portugal', historia: 'As aparições de Nossa Senhora em Fátima, Portugal, em 1917, a três pastorinhos.' },
-    { nome: 'São Jorge', data: '23-04', descricao: 'Mártir e guerreiro', historia: 'São Jorge foi um soldado romano no exército do imperador Diocleciano, venerado como mártir cristão.' },
-    { nome: 'São Francisco Xavier', data: '03-12', descricao: 'Padroeiro do Oriente e das Missões', historia: 'Missionário jesuíta que evangelizou a Índia, Japão e China no século XVI. Cofundador da Companhia de Jesus.', imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/11/27/2019-11-27-s-francesco-saverio/1574831488912.jpg' }
-  ];
-
-  const buscarSantoVaticanNews = async () => {
+  // ✅ Função para buscar santo do dia
+  const buscarSantoDoDia = () => {
+    setCarregando(true);
     try {
-      setCarregando(true);
-      
       const hoje = new Date();
       const dia = String(hoje.getDate()).padStart(2, '0');
       const mes = String(hoje.getMonth() + 1).padStart(2, '0');
       const ano = hoje.getFullYear();
       
       setDataAtual(`${dia}/${mes}/${ano}`);
+      const dataKey = `${dia}-${mes}`;
       
-      // DADOS PRÉ-DEFINIDOS COMPLETOS (fallback robusto)
-      const santosPorData: { [key: string]: any } = {
-        // Dezembro
-        '01-12': { 
-          nome: 'Santo Elói', 
-          descricao: 'Padroeiro dos ourives e ferreiros', 
-          historia: 'Bispo de Noyon, conhecido por sua habilidade como ourives e por sua caridade. Foi conselheiro do rei Dagoberto I e fundou vários mosteiros.', 
-          imagem: 'https://upload.wikimedia.org/wikipedia/commons/thumb/7/7d/Saint_Eloi.jpg/800px-Saint_Eloi.jpg' 
-        },
-        '02-12': { 
-          nome: 'Beata Maria Ângela Astorch', 
-          descricao: 'Mística e abadessa clarissa', 
-          historia: 'Religiosa espanhola conhecida por suas experiências místicas e vida de oração. Foi abadessa do convento de Murcia e destacou-se por sua espiritualidade profunda.' 
-        },
-        '03-12': { 
-          nome: 'São Francisco Xavier', 
-          descricao: 'Padroeiro das Missões', 
-          historia: 'Missionário jesuíta que evangelizou a Ásia no século XVI. Co-fundador da Companhia de Jesus, levou o Evangelho à Índia, Japão e outras regiões asiáticas.', 
-          imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/11/27/2019-11-27-s-francesco-saverio/1574831488912.jpg' 
-        },
-        '04-12': { 
-          nome: 'São João Damasceno', 
-          descricao: 'Doutor da Igreja', 
-          historia: 'Teólogo e poeta siríaco, defensor do culto às imagens sagradas. Escreveu importantes obras teológicas e é considerado o último dos Padres gregos.' 
-        },
-        '05-12': { 
-          nome: 'São Sabas', 
-          descricao: 'Abade e fundador de mosteiros', 
-          historia: 'Fundador do mosteiro de Mar Saba na Palestina, importante figura do monaquismo cristão. Organizou a vida monástica na Terra Santa.' 
-        },
-        '06-12': { 
-          nome: 'São Nicolau', 
-          descricao: 'Bispo de Mira, inspiração do Papai Noel', 
-          historia: 'Bispo grego do século IV conhecido por sua generosidade e milagres. Padroeiro das crianças, marinheiros e comerciantes.', 
-          imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/12/06/2019-12-06-s-nicola-di-bari/1575638335837.JPG' 
-        },
-        '07-12': { 
-          nome: 'Santo Ambrósio', 
-          descricao: 'Doutor da Igreja, bispo de Milão', 
-          historia: 'Um dos quatro grandes Doutores da Igreja latina, influente teólogo e bispo. Batizou Santo Agostinho e defendeu a ortodoxia contra heresias.' 
-        },
-        '08-12': { 
-          nome: 'Imaculada Conceição', 
-          descricao: 'Dogma mariano', 
-          historia: 'Celebração do dogma que declara Maria concebida sem pecado original. Padroeira de Portugal e de várias dioceses ao redor do mundo.' 
-        },
-        '09-12': { 
-          nome: 'São Juan Diego', 
-          descricao: 'Vidente de Nossa Senhora de Guadalupe', 
-          historia: 'Indígena mexicano que testemunhou as aparições de Nossa Senhora em 1531. Sua tilma com a imagem de Nossa Senhora é venerada na Basílica de Guadalupe.' 
-        },
-        '10-12': { 
-          nome: 'Nossa Senhora de Loreto', 
-          descricao: 'Padroeira dos aviadores', 
-          historia: 'Devoção mariana associada à Santa Casa de Nazaré, que segundo a tradição foi transportada por anjos até Loreto, Itália.' 
-        },
-        '11-12': { 
-          nome: 'São Dâmaso I', 
-          descricao: 'Papa do século IV', 
-          historia: 'Papa que combateu heresias e promoveu a liturgia romana. Encomendou a tradução da Bíblia para o latim (Vulgata) a São Jerônimo.' 
-        },
-        '12-12': { 
-          nome: 'Nossa Senhora de Guadalupe', 
-          descricao: 'Padroeira das Américas', 
-          historia: 'Aparições marianas no México em 1531 a São Juan Diego. A imagem milagrosa na tilma é um símbolo importante da evangelização das Américas.', 
-          imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/12/12/2019-12-12-nostra-signora-di-guadalupe/1576145367638.JPG' 
-        },
-        '13-12': { 
-          nome: 'Santa Luzia', 
-          descricao: 'Virgem e mártir', 
-          historia: 'Mártir siciliana do século IV, padroeira da visão e dos cegos. Seu nome significa "luz" e é invocada contra doenças oculares.' 
-        },
-        '14-12': { 
-          nome: 'São João da Cruz', 
-          descricao: 'Doutor da Igreja, místico', 
-          historia: 'Reformador carmelita, poeta místico espanhol do século XVI. Co-fundador dos Carmelitas Descalços com Santa Teresa de Ávila.' 
-        },
-        '15-12': { 
-          nome: 'Santa Maria di Rosa', 
-          descricao: 'Fundadora das Servas da Caridade', 
-          historia: 'Religiosa italiana que dedicou sua vida ao cuidado dos doentes e necessitados, especialmente durante epidemias.' 
-        },
-        '25-12': { 
-          nome: 'Natal do Senhor', 
-          descricao: 'Nascimento de Jesus Cristo', 
-          historia: 'Celebração do nascimento de Jesus Cristo em Belém. A festa mais importante do calendário cristão, celebra a Encarnação do Verbo de Deus.' 
-        },
-        
-        // Novembro
-        '30-11': { 
-          nome: 'Santo André, Apóstolo', 
-          descricao: 'Irmão de São Pedro', 
-          historia: 'Um dos doze apóstolos, pregou na Grécia e foi martirizado em cruz em forma de X. Padroeiro da Escócia, Grécia e Rússia.', 
-          imagem: 'https://www.vaticannews.va/content/dam/vaticannews/multimedia/2020/11/30/2020-11-30-santo-andrea/jcr:content/renditions/cq5dam.thumbnail.cropped.750.422.jpeg' 
-        },
-        
-        // Outubro
-        '04-10': { 
-          nome: 'São Francisco de Assis', 
-          descricao: 'Fundador dos Franciscanos', 
-          historia: 'Renunciou à riqueza para viver em pobreza, amante da natureza e dos animais. Recebeu os estigmas e é um dos santos mais populares da Igreja.', 
-          imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/10/04/2019-10-04-s-francesco-d-assisi/1570205197236.jpg' 
-        },
-        
-        // Junho
-        '13-06': { 
-          nome: 'Santo Antônio de Pádua', 
-          descricao: 'Doutor da Igreja', 
-          historia: 'Pregador franciscano português, conhecido como "santo dos milagres". Doutor da Igreja e padroeiro dos objetos perdidos.', 
-          imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/06/13/2019-06-13-s-antonio-da-padova/1560428267794.jpg' 
-        },
-        
-        // Maio
-        '13-05': { 
-          nome: 'Nossa Senhora de Fátima', 
-          descricao: 'Aparições em Fátima', 
-          historia: 'Aparições de Nossa Senhora a três pastorinhos em Fátima, Portugal, em 1917. Mensagens de oração, penitência e conversão.' 
-        },
-        
-        // Abril
-        '23-04': { 
-          nome: 'São Jorge', 
-          descricao: 'Mártir e guerreiro', 
-          historia: 'Soldado romano martirizado por sua fé cristã. Padroeiro da Inglaterra, Portugal e dos escoteiros. Conhecido pela lenda do dragão.' 
-        },
-        
-        // Setembro
-        '05-09': { 
-          nome: 'Santa Teresa de Calcutá', 
-          descricao: 'Missionária da Caridade', 
-          historia: 'Fundadora das Missionárias da Caridade, dedicou sua vida aos mais pobres entre os pobres em Calcutá, Índia. Prêmio Nobel da Paz em 1979.' 
-        },
-        
-        // Outubro (outro)
-        '22-10': { 
-          nome: 'São João Paulo II', 
-          descricao: 'Papa peregrino', 
-          historia: 'Pontificado de 27 anos, viajou por todo o mundo promovendo a paz e a dignidade humana. Canonizado em 2014.' 
-        },
+      const santo = SANTOS_COMPLETOS[dataKey] || {
+        nome: 'Santos do Dia',
+        descricao: 'Celebração dos santos da Igreja',
+        historia: 'A Igreja celebra diariamente a memória dos santos que são modelos de vida cristã e intercessores junto a Deus.',
+        imagem: null
       };
       
-      const dataKey = `${dia}-${mes}`;
-      const santoHoje = santosPorData[dataKey];
-      
-      if (santoHoje) {
-        setSantoDoDia({
-          ...santoHoje,
-          fonte: 'Calendário Litúrgico Católico',
-          url: `https://www.vaticannews.va/pt/santo-do-dia/${mes}/${dia}.html`
-        });
-      } else {
-        // Se não tem santo específico, mostra um genérico
-        const diasDaSemana = ['Domingo', 'Segunda-feira', 'Terça-feira', 'Quarta-feira', 'Quinta-feira', 'Sexta-feira', 'Sábado'];
-        const diaSemana = diasDaSemana[hoje.getDay()];
-        
-        setSantoDoDia({
-          nome: 'Santos do Dia',
-          descricao: `Na ${diaSemana}, a Igreja celebra a memória dos santos`,
-          historia: 'Cada dia do ano litúrgico é dedicado à memória de santos que testemunharam o Evangelho com suas vidas. Consulte o calendário litúrgico para informações específicas sobre os santos celebrados hoje.',
-          imagem: null,
-          fonte: 'Igreja Católica',
-          url: `https://www.vaticannews.va/pt/liturgia-do-dia.html`
-        });
-      }
-      
+      setSantoDoDia(santo);
     } catch (error) {
-      console.error('Erro:', error);
-      // Fallback de emergência
-      const hoje = new Date();
-      const dia = String(hoje.getDate()).padStart(2, '0');
-      const mes = String(hoje.getMonth() + 1).padStart(2, '0');
-      setDataAtual(`${dia}/${mes}/${hoje.getFullYear()}`);
-      
+      console.error('Erro ao buscar santo do dia:', error);
       setSantoDoDia({
         nome: 'Santos do Dia',
         descricao: 'Celebração dos santos da Igreja',
         historia: 'A Igreja celebra diariamente a memória dos santos que são modelos de vida cristã e intercessores junto a Deus.',
-        fonte: 'Tradição Católica',
-        imagem: null,
-        url: 'https://www.vaticannews.va/pt.html'
+        imagem: null
       });
     } finally {
       setCarregando(false);
     }
   };
 
+  // ✅ Busca por nome
   const buscarSantoPorNome = () => {
-    if (buscaSanto.trim() === '') {
+    if (!buscaSanto.trim()) {
       setSantoEncontrado(null);
       return;
     }
-
-    setBuscando(true);
     
+    setBuscando(true);
     setTimeout(() => {
-      const santo = todosSantos.find(s => 
+      const santo = TODOS_SANTOS.find(s => 
         s.nome.toLowerCase().includes(buscaSanto.toLowerCase())
       );
-
-      setSantoEncontrado(santo || { 
-        nome: 'Santo não encontrado', 
+      
+      setSantoEncontrado(santo || {
+        nome: 'Santo não encontrado',
         descricao: 'Não encontramos este santo em nossa base de dados.',
-        historia: 'Verifique se o nome está correto ou tente buscar por outra data.'
+        historia: 'Verifique se o nome está correto ou tente buscar por outra data.',
+        imagem: null
       });
       setBuscando(false);
-    }, 800);
+    }, 500);
   };
 
+  // ✅ Busca por data
   const buscarSantoPorData = (dia: number, mes: number) => {
     setBuscando(true);
     const diaStr = String(dia).padStart(2, '0');
@@ -248,74 +266,57 @@ export default function SantoDoDia() {
     
     setTimeout(() => {
       const dataKey = `${diaStr}-${mesStr}`;
+      const santo = SANTOS_COMPLETOS[dataKey];
       
-      // Dados pré-definidos para busca por data
-      const santosPorDataBusca: { [key: string]: any } = {
-        '01-12': { nome: 'Santo Elói', descricao: 'Padroeiro dos ourives e ferreiros', historia: 'Bispo de Noyon, conselheiro real e fundador de mosteiros.' },
-        '02-12': { nome: 'Beata Maria Ângela Astorch', descricao: 'Mística e abadessa clarissa', historia: 'Religiosa espanhola conhecida por sua espiritualidade profunda.' },
-        '03-12': { nome: 'São Francisco Xavier', descricao: 'Padroeiro das Missões', historia: 'Missionário jesuíta que evangelizou a Ásia no século XVI.', imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/11/27/2019-11-27-s-francesco-saverio/1574831488912.jpg' },
-        '04-12': { nome: 'São João Damasceno', descricao: 'Doutor da Igreja', historia: 'Teólogo defensor do culto às imagens sagradas.' },
-        '05-12': { nome: 'São Sabas', descricao: 'Abade e fundador de mosteiros', historia: 'Organizador da vida monástica na Terra Santa.' },
-        '06-12': { nome: 'São Nicolau', descricao: 'Bispo de Mira', historia: 'Conhecido por sua generosidade, inspiração do Papai Noel.', imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/12/06/2019-12-06-s-nicola-di-bari/1575638335837.JPG' },
-        '07-12': { nome: 'Santo Ambrósio', descricao: 'Doutor da Igreja', historia: 'Bispo de Milão que batizou Santo Agostinho.' },
-        '08-12': { nome: 'Imaculada Conceição', descricao: 'Dogma mariano', historia: 'Celebração de Maria concebida sem pecado original.' },
-        '09-12': { nome: 'São Juan Diego', descricao: 'Vidente de Guadalupe', historia: 'Indígena que recebeu as aparições de Nossa Senhora.' },
-        '10-12': { nome: 'Nossa Senhora de Loreto', descricao: 'Padroeira dos aviadores', historia: 'Devoção à Santa Casa de Nazaré transportada por anjos.' },
-        '11-12': { nome: 'São Dâmaso I', descricao: 'Papa do século IV', historia: 'Promoveu a liturgia romana e a tradução da Bíblia.' },
-        '12-12': { nome: 'Nossa Senhora de Guadalupe', descricao: 'Padroeira das Américas', historia: 'Aparições marianas no México em 1531.', imagem: 'https://www.vaticannews.va/content/dam/vaticannews/agenzie/images/srv/2019/12/12/2019-12-12-nostra-signora-di-guadalupe/1576145367638.JPG' },
-        '13-12': { nome: 'Santa Luzia', descricao: 'Virgem e mártir', historia: 'Padroeira da visão e dos cegos.' },
-        '14-12': { nome: 'São João da Cruz', descricao: 'Doutor místico', historia: 'Reformador carmelita e poeta espiritual.' },
-        '15-12': { nome: 'Santa Maria di Rosa', descricao: 'Fundadora das Servas da Caridade', historia: 'Dedicou sua vida ao cuidado dos doentes.' },
-        '25-12': { nome: 'Natal do Senhor', descricao: 'Nascimento de Jesus', historia: 'Celebração do nascimento de Jesus Cristo.' },
-        '30-11': { nome: 'Santo André', descricao: 'Apóstolo de Cristo', historia: 'Irmão de São Pedro, pregou na Grécia.' },
-        '04-10': { nome: 'São Francisco de Assis', descricao: 'Fundador franciscano', historia: 'Amante da pobreza e da natureza.' },
-        '13-06': { nome: 'Santo Antônio', descricao: 'Doutor da Igreja', historia: 'Conhecido como o "santo dos milagres".' },
-        '13-05': { nome: 'Nossa Senhora de Fátima', descricao: 'Aparições em Portugal', historia: 'Mensagens de oração e conversão.' },
-        '23-04': { nome: 'São Jorge', descricao: 'Mártir cristão', historia: 'Padroeiro de vários países e dos escoteiros.' },
-        '05-09': { nome: 'Santa Teresa de Calcutá', descricao: 'Missionária da Caridade', historia: 'Serva dos mais pobres em Calcutá.' },
-        '22-10': { nome: 'São João Paulo II', descricao: 'Papa peregrino', historia: 'Pontífice que viajou por todo o mundo.' },
-      };
-
-      const santoData = santosPorDataBusca[dataKey];
-      
-      if (santoData) {
+      if (santo) {
         setSantoEncontrado({
-          ...santoData,
-          fonte: 'Calendário Litúrgico'
+          ...santo,
+          data: dataKey
         });
       } else {
-        // Busca na lista local
-        const santoLocal = todosSantos.find(s => s.data === dataKey);
-        
-        if (santoLocal) {
-          setSantoEncontrado(santoLocal);
-        } else {
-          setSantoEncontrado({
-            nome: 'Santos do Dia',
-            descricao: 'Nenhum santo específico registrado para esta data.',
-            historia: 'A Igreja celebra a memória de todos os santos cuja festa ocorre neste dia.',
-            fonte: 'Igreja Católica'
-          });
-        }
+        setSantoEncontrado({
+          nome: 'Santo não encontrado',
+          descricao: 'Não há santo registrado para esta data em nossa base.',
+          historia: 'A Igreja celebra a memória de todos os santos cuja festa ocorre neste dia.',
+          imagem: null
+        });
       }
-      
       setBuscando(false);
-    }, 800);
+    }, 500);
+  };
+
+  // ✅ Funções de calendário
+  const getDaysInMonth = (month: number, year: number) => {
+    return new Date(year, month, 0).getDate();
+  };
+
+  const isToday = (day: number, month: number) => {
+    const hoje = new Date();
+    return day === hoje.getDate() && month === hoje.getMonth() + 1;
   };
 
   const gerarDiasDoMes = () => {
-    return Array.from({ length: 30 }, (_, i) => i + 1);
+    const hoje = new Date();
+    const ano = hoje.getFullYear();
+    const diasNoMes = getDaysInMonth(mesSelecionado, ano);
+    return Array.from({ length: diasNoMes }, (_, i) => i + 1);
   };
 
+  const nomesMeses = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ];
+
+  // ✅ Efeito inicial
   useEffect(() => {
-    buscarSantoVaticanNews();
+    buscarSantoDoDia();
   }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-blue-100 to-indigo-100">
       <Navigation />
 
-      {/* 🔵 BANNER RESPONSIVO - IGUAL AOS MOMENTOS LITÚRGICOS E DOAÇÕES */}
+      {/* 🔵 BANNER RESPONSIVO */}
       <section className="relative w-full overflow-hidden bg-gray-900 mt-20">
         <div className="relative h-[400px] sm:h-[400px] md:h-[500px] lg:h-[600px] overflow-hidden">
           <img 
@@ -323,9 +324,7 @@ export default function SantoDoDia() {
             alt="Santo do Dia"
             className="absolute inset-0 w-full h-full object-cover object-center"
             onError={(e) => {
-              const img = e.currentTarget;
-              img.onerror = null;
-              img.src = '/santododia.png';
+              e.currentTarget.src = '/santododia.png';
             }}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/50 to-transparent" />
@@ -353,7 +352,7 @@ export default function SantoDoDia() {
               <div className="flex items-center justify-center h-32 sm:h-36 md:h-40">
                 <div className="text-center">
                   <div className="animate-spin rounded-full h-8 w-8 sm:h-10 sm:w-10 md:h-12 md:w-12 border-2 border-blue-200 border-t-blue-600 mx-auto mb-3"></div>
-                  <p className="text-blue-700 text-sm sm:text-base font-medium">Consultando Vatican News...</p>
+                  <p className="text-blue-700 text-sm sm:text-base font-medium">Carregando santo do dia...</p>
                 </div>
               </div>
             ) : santoDoDia ? (
@@ -369,7 +368,7 @@ export default function SantoDoDia() {
                     </div>
                   ) : (
                     <div className="w-full lg:w-2/5">
-                      <div className="w-full h-48 sm:h-52 md:h-56 lg:h-64 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-200 to-indigo-300 flex items-center justify-center text-5xl sm:text-6xl shadow-lg">
+                      <div className="w-full h-48 sm:h-52 md:h-56 lg:h-64 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-200 to-indigo-300 flex items-center justify-center text-5xl sm:text-6xl md:text-7xl shadow-lg">
                         ⛪
                       </div>
                     </div>
@@ -386,24 +385,6 @@ export default function SantoDoDia() {
                       </p>
                     </div>
                   </div>
-                </div>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between pt-4 sm:pt-5 border-t border-blue-100 gap-3">
-                  <div className="text-sm sm:text-base text-blue-500">
-                    <span className="font-semibold">Fonte:</span> {santoDoDia.fonte}
-                  </div>
-                  {santoDoDia.url && (
-                    <a 
-                      href={santoDoDia.url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-sm sm:text-base text-blue-600 hover:text-blue-800 font-medium hover:underline flex items-center gap-2"
-                    >
-                      Ler mais no Vatican News 
-                      <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
-                  )}
                 </div>
               </div>
             ) : null}
@@ -456,9 +437,6 @@ export default function SantoDoDia() {
                         src={santoEncontrado.imagem} 
                         alt={santoEncontrado.nome}
                         className="w-full h-48 sm:h-52 md:h-56 rounded-lg sm:rounded-xl object-cover shadow-md border border-blue-200"
-                        onError={(e) => {
-                          e.currentTarget.style.display = 'none';
-                        }}
                       />
                     </div>
                   )}
@@ -478,19 +456,35 @@ export default function SantoDoDia() {
 
             {/* Calendário */}
             <div>
-              <label className="block text-lg sm:text-xl font-semibold text-blue-800 mb-3 sm:mb-4">
-                Buscar por data
-              </label>
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-lg sm:text-xl font-semibold text-blue-800">
+                  Buscar por data - {nomesMeses[mesSelecionado - 1]}
+                </label>
+                <select
+                  value={mesSelecionado}
+                  onChange={(e) => setMesSelecionado(Number(e.target.value))}
+                  className="px-3 py-2 border border-blue-200 rounded-lg text-blue-800 bg-white"
+                >
+                  {nomesMeses.map((mes, index) => (
+                    <option key={index} value={index + 1}>{mes}</option>
+                  ))}
+                </select>
+              </div>
+              
               <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-4">
-                {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((day, i) => (
-                  <div key={i} className="text-center text-sm sm:text-base font-bold text-blue-700 p-2">{day}</div>
+                {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((day, i) => (
+                  <div key={i} className="text-center text-xs sm:text-sm font-bold text-blue-700 p-2">{day}</div>
                 ))}
                 {gerarDiasDoMes().map((dia) => (
                   <button 
                     key={dia} 
-                    onClick={() => buscarSantoPorData(dia, 12)}
+                    onClick={() => buscarSantoPorData(dia, mesSelecionado)}
                     disabled={buscando}
-                    className="p-2 sm:p-3 border border-blue-200 rounded-lg text-sm sm:text-base hover:bg-blue-100 hover:border-blue-400 transition-all disabled:opacity-50 font-semibold text-blue-800 bg-white/80 hover:shadow-md"
+                    className={`p-2 sm:p-3 border rounded-lg text-xs sm:text-sm font-semibold transition-all disabled:opacity-50 bg-white/80 hover:shadow-md ${
+                      isToday(dia, mesSelecionado) 
+                        ? 'border-blue-500 bg-blue-100 text-blue-800' 
+                        : 'border-blue-200 text-blue-800 hover:bg-blue-100 hover:border-blue-400'
+                    }`}
                   >
                     {dia}
                   </button>

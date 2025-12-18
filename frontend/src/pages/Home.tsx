@@ -71,11 +71,25 @@ export default function Home() {
       <VaticanNewsSection />
 
       {/* LITURGIA COM ID PARA ÂNCORA */}
-      <section id="liturgia" className="mb-8 sm:mb-10">
+      <section id="liturgia" className="mb-1 sm:mb-1">
         <LiturgiaDiaria />
       </section>
       
-      {/* REDES SOCIAIS */}
+      {/* REDES SOCIAIS - TÍTULO ADICIONADO */}
+      <div className="relative max-w-4x1 mx-auto w-full px-8 mb-6">
+        <div className="text-center">
+          <h2 className="text-2xl md:text-4xl font-bold text-white mb-1"
+              style={{ 
+                color: '#2e8cb8',
+                textShadow: '1px 1px 1px rgba(0,0,0,0.3)'
+              }}>
+            Nossas Redes Sociais
+          </h2>
+          
+        </div>
+      </div>
+      
+      {/* SOCIAL MEDIA PANEL */}
       <SocialMediaPanel />
       
       {/* POPUPS */}

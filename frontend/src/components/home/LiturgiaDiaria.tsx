@@ -64,9 +64,9 @@ const LiturgiaDiaria = () => {
 
   if (loading) {
     return (
-      <section className="py-12 bg-gradient-to-br from-blue-50 to-blue-100 my-8 rounded-3xl">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="text-center mb-10">
+      <section className="py-12 bg-gradient-to-br from-blue-50 to-blue-100 my-4 rounded-3xl">
+        <div className="max-w-6xl mx-auto px-2">
+          <div className="text-center mb-4">
             <h2 className="text-3xl font-bold text-blue-900 mb-3 flex items-center justify-center gap-3 font-display">
               <span className="text-4xl">📖</span>
               Liturgia Diária

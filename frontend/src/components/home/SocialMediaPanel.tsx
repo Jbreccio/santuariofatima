@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Instagram, Youtube, Facebook } from 'lucide-react';
-import { Play,PlayCircle } from 'lucide-react';
+import {
+  Play,
+  Maximize2,
+  Clock,
+  Eye,
+  Heart
+} from 'lucide-react';
 
-// 1️⃣ Definir interfaces
+/* =======================
+   INTERFACES
+======================= */
 interface InstagramPost {
   id: string;
   caption?: string;
-  media_type?: string;
   media_url: string;
-  thumbnail_url?: string;
   permalink: string;
-  timestamp?: string;
 }
 
 interface YouTubeVideo {
@@ -23,391 +27,325 @@ interface YouTubeVideo {
   };
 }
 
-interface FacebookPost {
-  id: string;
-  message?: string;
-  created_time?: string;
-  full_picture?: string;
-  permalink_url: string;
-}
-
+/* =======================
+   COMPONENTE
+======================= */
 export default function SocialMediaPanel() {
-  // 2️⃣ Tipar os estados corretamente
-  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
-  const [instagramPost, setInstagramPost] = useState<InstagramPost | null>(null);
+  const [instagramPosts, setInstagramPosts] = useState<InstagramPost[]>([
+    {
+      id: '1',
+      caption: 'Missa Dominical Completa com a comunidade',
+      media_url: 'https://images.unsplash.com/photo-1544831378-7b0f63d6f4c1?w=600',
+      permalink: 'https://www.instagram.com/santuariodefatima'
+    },
+    {
+      id: '2',
+      caption: 'Momento de oração e reflexão no santuário',
+      media_url: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=600',
+      permalink: 'https://www.instagram.com/santuariodefatima'
+    },
+    {
+      id: '3',
+      caption: 'Celebração especial da comunidade jovem',
+      media_url: 'https://images.unsplash.com/photo-1544831378-7b0f63d6f4c1?w=600',
+      permalink: 'https://www.instagram.com/santuariodefatima'
+    }
+  ]);
+  
   const [youtubeLive, setYoutubeLive] = useState<YouTubeVideo | null>(null);
   const [youtubeVideos, setYoutubeVideos] = useState<YouTubeVideo[]>([]);
-  const [facebookPost, setFacebookPost] = useState<FacebookPost | null>(null);
   const [loading, setLoading] = useState(true);
+  const [liveVideoPlaying, setLiveVideoPlaying] = useState<string | null>(null);
+  const [liveStatus, setLiveStatus] = useState<'live' | 'none'>('none');
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
-  // CONFIGURE SUAS CHAVES DE API AQUI
-  const INSTAGRAM_ACCESS_TOKEN = 'SEU_INSTAGRAM_ACCESS_TOKEN';
-  const INSTAGRAM_USER_ID = 'SEU_INSTAGRAM_USER_ID';
-  const YOUTUBE_API_KEY = 'SUA_YOUTUBE_API_KEY';
-  const YOUTUBE_CHANNEL_ID = 'UCYourChannelID';
-  const FACEBOOK_ACCESS_TOKEN = 'SEU_FACEBOOK_ACCESS_TOKEN';
-  const FACEBOOK_PAGE_ID = 'SEU_PAGE_ID';
+  const YOUTUBE_CHANNEL_ID = 'UCwTM4qaQO3fsRpKAAZUZ8Ng';
 
-  const fetchInstagramPost = async () => {
+  /* =======================
+     YOUTUBE RSS (SEM API)
+  ======================= */
+  const fetchYouTubeViaRSS = async () => {
     try {
-      const response = await fetch(
-        `https://graph.instagram.com/${INSTAGRAM_USER_ID}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink,timestamp&limit=1&access_token=${INSTAGRAM_ACCESS_TOKEN}`
-      );
+      const rssUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${YOUTUBE_CHANNEL_ID}`;
+      const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(rssUrl)}`;
+
+      const response = await fetch(proxyUrl);
       const data = await response.json();
-      if (data.data && data.data.length > 0) {
-        setInstagramPost(data.data[0]);
-        return;
+
+      const parser = new DOMParser();
+      const xml = parser.parseFromString(data.contents, 'text/xml');
+      const items = xml.getElementsByTagName('entry');
+
+      const videos: YouTubeVideo[] = [];
+      let live: YouTubeVideo | null = null;
+
+      for (let i = 0; i < Math.min(items.length, 8); i++) {
+        const videoId =
+          items[i].getElementsByTagName('yt:videoId')[0]?.textContent || '';
+        const title =
+          items[i].getElementsByTagName('title')[0]?.textContent || '';
+
+        const video: YouTubeVideo = {
+          id: { videoId },
+          snippet: {
+            title,
+            thumbnails: {
+              high: { url: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg` }
+            }
+          }
+        };
+
+        if (!live && title.toLowerCase().includes('ao vivo')) {
+          live = video;
+          setLiveStatus('live');
+        }
+
+        videos.push(video);
       }
-    } catch (error) {
-      console.error('Erro ao buscar post do Instagram:', error);
+
+      setYoutubeLive(live || videos[0]);
+      setLiveVideoPlaying((live || videos[0]).id.videoId);
+      setYoutubeVideos(videos.slice(0, 4));
+    } catch {
+      console.error('Erro ao carregar RSS');
     }
-    
-    setInstagramPost({
-      id: '1',
-      caption: '🙏 Venha participar de nossas celebrações! Missas diárias às 19h30. #FéEmCristo #SantuárioDeFátima',
-      media_url: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&h=600&fit=crop',
-      permalink: 'https://www.instagram.com/santuariodefatima',
-    });
-  };
-
-  const fetchYouTubeContent = async () => {
-    try {
-      const liveResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${YOUTUBE_CHANNEL_ID}&eventType=live&type=video&maxResults=1&key=${YOUTUBE_API_KEY}`
-      );
-      const liveData = await liveResponse.json();
-      
-      if (liveData.items && liveData.items.length > 0) {
-        setYoutubeLive(liveData.items[0]);
-      }
-
-      const videosResponse = await fetch(
-        `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${YOUTUBE_CHANNEL_ID}&order=date&type=video&maxResults=4&key=${YOUTUBE_API_KEY}`
-      );
-      const videosData = await videosResponse.json();
-      
-      if (videosData.items) {
-        setYoutubeVideos(videosData.items);
-        return;
-      }
-    } catch (error) {
-      console.error('Erro ao buscar conteúdo do YouTube:', error);
-    }
-
-    setYoutubeVideos([
-      {
-        id: { videoId: 'jNQXAC9IVRw' },
-        snippet: {
-          title: 'Missa Dominical - 01/12/2024',
-          thumbnails: { 
-            high: { url: 'https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg' }
-          }
-        }
-      },
-      {
-        id: { videoId: 'jNQXAC9IVRw' },
-        snippet: {
-          title: 'Terço em Família',
-          thumbnails: { 
-            high: { url: 'https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg' }
-          }
-        }
-      },
-      {
-        id: { videoId: 'jNQXAC9IVRw' },
-        snippet: {
-          title: 'Adoração ao Santíssimo',
-          thumbnails: { 
-            high: { url: 'https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg' }
-          }
-        }
-      },
-      {
-        id: { videoId: 'jNQXAC9IVRw' },
-        snippet: {
-          title: 'Novena de Fátima',
-          thumbnails: { 
-            high: { url: 'https://i.ytimg.com/vi/jNQXAC9IVRw/hqdefault.jpg' }
-          }
-        }
-      }
-    ]);
-  };
-
-  const fetchFacebookPost = async () => {
-    try {
-      const response = await fetch(
-        `https://graph.facebook.com/v18.0/${FACEBOOK_PAGE_ID}/posts?fields=id,message,created_time,full_picture,permalink_url&limit=1&access_token=${FACEBOOK_ACCESS_TOKEN}`
-      );
-      const data = await response.json();
-      if (data.data && data.data.length > 0) {
-        setFacebookPost(data.data[0]);
-        return;
-      }
-    } catch (error) {
-      console.error('Erro ao buscar post do Facebook:', error);
-    }
-
-    setFacebookPost({
-      id: '1',
-      message: '🕊️ Programação da semana: Missas diárias às 19h30. Confissões disponíveis aos sábados (17h-18h) e domingos (9h-10h). Venha fortalecer sua fé conosco!',
-      full_picture: 'https://images.unsplash.com/photo-1438232992991-995b7058bbb3?w=600&h=600&fit=crop',
-      permalink_url: 'https://www.facebook.com',
-    });
   };
 
   useEffect(() => {
-    const loadAllData = async () => {
+    const load = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchInstagramPost(),
-        fetchYouTubeContent(),
-        fetchFacebookPost()
-      ]);
+      await fetchYouTubeViaRSS();
       setLoading(false);
     };
-
-    loadAllData();
-    const interval = setInterval(loadAllData, 60000);
-    return () => clearInterval(interval);
+    load();
   }, []);
+
+  const toggleFullscreen = () => {
+    const iframe = document.querySelector('iframe');
+    if (!document.fullscreenElement && iframe) {
+      iframe.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
 
   if (loading) {
     return (
-      <section 
-        className="py-8 sm:py-12 md:py-16 bg-cover bg-center bg-no-repeat relative"
-        style={{ backgroundImage: "url('/fundoredessociais.png')" }}
-      >
-        <div className="absolute inset-0 bg-blue-50 bg-opacity-40"></div>
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 relative z-10">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600 mx-auto"></div>
-            <p className="mt-4 text-sm sm:text-base text-gray-600">Carregando conteúdo...</p>
-          </div>
-        </div>
-      </section>
+      <div className="py-16 text-center text-gray-600">
+        Carregando transmissões…
+      </div>
     );
   }
 
   return (
-    <section 
-      className="py-8 sm:py-12 md:py-16 bg-cover bg-center bg-no-repeat relative"
-      style={{ backgroundImage: "url('/fundoredessociais.png')" }}
+    <section
+      className="py-12 md:py-16 bg-cover bg-center relative"
+      style={{ 
+        backgroundImage: "url('/fundoredessociais.png')",
+        backgroundPosition: 'center center',
+        backgroundSize: 'cover'
+      }}
     >
-      <div className="absolute inset-0 bg-blue-50 bg-opacity-40"></div>
-      
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 relative z-10">
-        <div className="text-center mb-6 sm:mb-8 md:mb-12">
-          <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">Nossas Redes Sociais</h2>
-          <p className="text-sm sm:text-base md:text-lg text-gray-600">Acompanhe em tempo real</p>
-        </div>
+      <div className="absolute inset-0 bg-blue-50/40" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-4 sm:gap-6 mb-6 sm:mb-8">
+      <div className="relative max-w-7xl mx-auto px-4">
+        {/* ================= LINHA 1: YOUTUBE AO VIVO + 4 CARDS ================= */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 mb-8 md:mb-12">
           
-          {/* INSTAGRAM */}
-          <div className="md:col-span-1 lg:col-span-3">
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-full">
-              <div className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-500 p-3 sm:p-4">
-                <div className="flex items-center gap-2 text-white">
-                  <Instagram size={20} className="sm:hidden" strokeWidth={2.5} />
-                  <Instagram size={24} className="hidden sm:block" strokeWidth={2.5} />
-                  <h3 className="font-bold text-base sm:text-lg">Instagram</h3>
-                </div>
-              </div>
-              
-              {instagramPost && (
-                <a
-                  href={instagramPost.permalink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block hover:opacity-95 transition-opacity"
-                >
-                  <img 
-                    src={instagramPost.media_type === 'VIDEO' ? instagramPost.thumbnail_url : instagramPost.media_url}
-                    alt="Último post"
-                    className="w-full aspect-square object-cover"
-                  />
-                  <div className="p-3 sm:p-4">
-                    <p className="text-xs sm:text-sm text-gray-700 line-clamp-3 sm:line-clamp-4">
-                      {instagramPost.caption || 'Nova publicação no Instagram'}
-                    </p>
-                  </div>
-                </a>
-              )}
-            </div>
-          </div>
-
-          {/* YOUTUBE AO VIVO */}
-          <div className="md:col-span-2 lg:col-span-6">
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-full">
-              <div className="bg-gradient-to-r from-red-600 to-red-700 p-3 sm:p-4">
-                <div className="flex items-center justify-between text-white">
+          {/* YOUTUBE AO VIVO (LADO ESQUERDO) - DIMINUÍDO */}
+          <div className="lg:col-span-7"> {/* Diminuído de 8 para 7 colunas */}
+            <div className="bg-gray-950 rounded-xl md:rounded-2xl shadow-lg md:shadow-2xl overflow-hidden ring-1 ring-red-900/40 h-full">
+              <div className="bg-gradient-to-r from-red-800 via-red-700 to-red-800 p-3 md:p-4 text-white flex justify-between items-center">
+                <div className="flex items-center gap-2 md:gap-3 text-lg md:text-xl font-bold">
+                  {/* LOGO OFICIAL DO YOUTUBE */}
                   <div className="flex items-center gap-2">
-                    <Youtube size={24} className="sm:hidden" strokeWidth={2.5} />
-                    <Youtube size={28} className="hidden sm:block" strokeWidth={2.5} />
-                    <h3 className="font-bold text-base sm:text-xl">YouTube AO VIVO</h3>
-                  </div>
-                  <div className="flex items-center gap-1 sm:gap-2">
-                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-white rounded-full animate-pulse"></div>
-                    <span className="text-xs sm:text-sm font-semibold">LIVE</span>
+                    <div className="bg-red-600 p-1.5 md:p-2 rounded">
+                      <svg className="w-5 h-5 md:w-6 md:h-6 text-white" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                      </svg>
+                    </div>
+                    <span className="text-base md:text-xl">YouTube AO VIVO</span>
                   </div>
                 </div>
-              </div>
-              
-              <div className="relative bg-black" style={{ paddingBottom: '56.25%' }}>
-                {youtubeLive ? (
-                  <iframe
-                    className="absolute top-0 left-0 w-full h-full"
-                    src={`https://www.youtube.com/embed/${youtubeLive.id.videoId}?autoplay=0&rel=0&modestbranding=1`}
-                    title="YouTube Live"
-                    frameBorder="0"
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  ></iframe>
-                ) : (
-                  <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center text-white text-center p-4 sm:p-8">
-                    <div>
-                      <Youtube size={48} className="mx-auto mb-3 sm:mb-4 opacity-50 sm:w-16 sm:h-16" />
-                      <p className="text-sm sm:text-lg font-semibold mb-1 sm:mb-2">Nenhuma transmissão ao vivo</p>
-                      <p className="text-xs sm:text-sm opacity-75">Aguarde nossa próxima celebração</p>
-                    </div>
-                  </div>
+                {liveStatus === 'live' && (
+                  <span className="text-xs bg-red-600 px-2 md:px-3 py-1 rounded-full animate-pulse font-bold">
+                    🔴 AO VIVO
+                  </span>
                 )}
               </div>
-            </div>
-          </div>
 
-          {/* FACEBOOK */}
-          <div className="md:col-span-1 lg:col-span-3">
-            <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden h-full">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-3 sm:p-4">
-                <div className="flex items-center gap-2 text-white">
-                  <Facebook size={20} className="sm:hidden" strokeWidth={2.5} />
-                  <Facebook size={24} className="hidden sm:block" strokeWidth={2.5} />
-                  <h3 className="font-bold text-base sm:text-lg">Facebook</h3>
-                </div>
-              </div>
-              
-              {facebookPost && (
-                <a
-                  href={facebookPost.permalink_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block hover:opacity-95 transition-opacity"
-                >
-                  {facebookPost.full_picture && (
-                    <img 
-                      src={facebookPost.full_picture}
-                      alt="Último post"
-                      className="w-full aspect-square object-cover"
-                    />
-                  )}
-                  <div className="p-3 sm:p-4">
-                    <p className="text-xs sm:text-sm text-gray-700 line-clamp-3 sm:line-clamp-4">
-                      {facebookPost.message || 'Nova publicação no Facebook'}
-                    </p>
-                  </div>
-                </a>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Vídeos Anteriores */}
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6">
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6 text-center">Vídeos Anteriores</h3>
-          
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6">
-            {youtubeVideos.map((video, index) => (
-              <div 
-                key={index} 
-                className="group cursor-pointer" 
-                onClick={() => setSelectedVideo(video.id.videoId)}
+              {/* PLAYER SEM BORDAS - DIMINUÍDO */}
+              <div
+                className="relative bg-gradient-to-b from-black via-gray-900 to-black
+                           overflow-hidden border-x-0
+                           shadow-[0_0_20px_rgba(0,0,0,0.8)] md:shadow-[0_0_30px_rgba(0,0,0,0.9)]"
+                style={{ paddingBottom: '56.25%' }}
               >
-                <div className="relative rounded-lg sm:rounded-xl overflow-hidden bg-black shadow-md hover:shadow-xl transition-shadow">
-                  <img 
-                    src={video.snippet.thumbnails.high.url}
-                    alt={video.snippet.title}
-                    className="w-full aspect-video object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all duration-300">
-                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-red-600 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <Play size={20} className="text-white ml-0.5 sm:ml-1 sm:w-7 sm:h-7" fill="white" />
-                    </div>
-                  </div>
-                </div>
-                <h4 className="mt-2 sm:mt-3 text-xs sm:text-sm font-semibold text-gray-800 line-clamp-2">
-                  {video.snippet.title}
-                </h4>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="mt-6 sm:mt-8 text-center">
-          <div className="flex flex-col sm:flex-row flex-wrap justify-center gap-3 sm:gap-4">
-            <a 
-              href="https://www.instagram.com/santuariodefatima"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:opacity-90 transition-opacity shadow-lg"
-            >
-              <Instagram size={18} className="sm:w-5 sm:h-5" />
-              Seguir no Instagram
-            </a>
-            <a 
-              href="https://youtube.com/@santuariodefatimanews"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-red-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:bg-red-700 transition-colors shadow-lg"
-            >
-              <Youtube size={18} className="sm:w-5 sm:h-5" />
-              Inscrever-se
-            </a>
-            <a 
-              href="https://www.facebook.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-2 bg-blue-600 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-lg text-sm sm:text-base font-semibold hover:bg-blue-700 transition-colors shadow-lg"
-            >
-              <Facebook size={18} className="sm:w-5 sm:h-5" />
-              Seguir no Facebook
-            </a>
-          </div>
-        </div>
-
-        {/* Modal de Vídeo */}
-        {selectedVideo && (
-          <div 
-            className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-3 sm:p-4"
-            onClick={() => setSelectedVideo(null)}
-          >
-            <div 
-              className="w-full max-w-5xl relative"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                onClick={() => setSelectedVideo(null)}
-                className="absolute -top-10 right-0 sm:-top-12 bg-white text-gray-900 p-2 rounded-full hover:bg-gray-100 transition-colors z-10"
-                aria-label="Fechar vídeo"
-              >
-                <X size={24} />
-              </button>
-
-              <div className="relative bg-black rounded-lg sm:rounded-xl overflow-hidden shadow-2xl" style={{ paddingBottom: '56.25%' }}>
                 <iframe
-                  className="absolute top-0 left-0 w-full h-full"
-                  src={`https://www.youtube.com/embed/${selectedVideo}?autoplay=1&rel=0&modestbranding=1`}
-                  title="YouTube video"
+                  className="absolute inset-0 w-full h-full bg-black"
+                  src={`https://www.youtube.com/embed/${liveVideoPlaying}?autoplay=1&rel=0&modestbranding=1&controls=1`}
+                  title="YouTube video player"
                   frameBorder="0"
                   allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                   allowFullScreen
-                ></iframe>
+                />
+
+                <button
+                  onClick={toggleFullscreen}
+                  className="absolute bottom-2 md:bottom-3 right-2 md:right-3 bg-black/90 hover:bg-black text-white p-1.5 md:p-2 rounded-lg border border-white/30 hover:scale-110 transition-transform"
+                >
+                  <Maximize2 className="w-3 h-3 md:w-4 md:h-4" />
+                </button>
+              </div>
+
+              <div className="bg-gray-900 text-gray-200 p-3 md:p-4 text-sm border-t border-gray-800">
+                <div className="flex items-center gap-2 md:gap-3">
+                  <div className="w-6 h-6 md:w-7 md:h-7 rounded-full bg-red-700 flex items-center justify-center flex-shrink-0">
+                    <svg className="w-3 h-3 md:w-4 md:h-4 text-white" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-sm md:text-base truncate">{youtubeLive?.snippet.title}</h4>
+                    <p className="text-xs md:text-sm text-gray-400 truncate">Santuário Oficial de Fátima</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        )}
+
+          {/* 4 CARDS DO YOUTUBE (LADO DIREITO) - MAIOR E COM ESPAÇO OTIMIZADO */}
+          <div className="lg:col-span-5"> {/* Aumentado de 4 para 5 colunas */}
+            <div className="h-full flex flex-col">
+              <div className="bg-gradient-to-r from-red-700 to-red-600 p-2 md:p-3 text-white rounded-t-xl md:rounded-t-2xl shadow mb-2">
+                <h3 className="text-base md:text-lg font-bold flex items-center gap-2">
+                  {/* LOGO OFICIAL DO YOUTUBE */}
+                  <div className="bg-white p-1 rounded flex-shrink-0">
+                    <svg className="w-4 h-4 md:w-5 md:h-5 text-red-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"></path>
+                    </svg>
+                  </div>
+                  <span className="text-sm md:text-base">Vídeos em Destaque</span>
+                </h3>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-3 md:gap-4 h-full">
+                {youtubeVideos.map((video, i) => (
+                  <a
+                    key={i}
+                    href={`https://www.youtube.com/watch?v=${video.id.videoId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group bg-blue-50 rounded-lg md:rounded-xl shadow hover:shadow-md transition-all duration-300 overflow-hidden border border-blue-100 hover:border-red-200 h-full"
+                  >
+                    <div className="flex h-full">
+                      {/* THUMBNAIL - PROPORÇÃO CORRIGIDA */}
+                      <div className="w-2/5 relative overflow-hidden flex-shrink-0">
+                        <div className="h-full w-full bg-blue-100 relative">
+                          <img
+                            src={video.snippet.thumbnails.high.url}
+                            alt={video.snippet.title}
+                            className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                          <div className="absolute top-1.5 left-1.5 bg-red-600 text-white text-[10px] md:text-xs px-2 py-0.5 rounded">
+                            {i === 0 ? 'TOP' : `#${i+1}`}
+                          </div>
+                          {/* BOTÃO PLAY SOBRE A IMAGEM */}
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-black/30">
+                            <div className="bg-red-600 text-white p-1.5 md:p-2 rounded-full">
+                              <Play className="w-3 h-3 md:w-4 md:h-4" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* CONTEÚDO - PREENCHE TODO O ESPAÇO */}
+                      <div className="w-3/5 p-2.5 md:p-3 bg-blue-50 flex flex-col justify-between min-w-0">
+                        <div>
+                          <h4 className="text-xs md:text-sm font-semibold text-gray-800 line-clamp-3 md:line-clamp-4 mb-2 break-words">
+                            {video.snippet.title}
+                          </h4>
+                        </div>
+                        <div className="flex items-center text-[10px] md:text-xs text-gray-500 gap-2">
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Clock className="w-3 h-3" />
+                            <span>Há {i+1} dia{i !== 0 ? 's' : ''}</span>
+                          </div>
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            <Eye className="w-3 h-3" />
+                            <span>{Math.floor(Math.random() * 2) + 1}K views</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ================= 3 CARDS DO INSTAGRAM ================= */}
+        <div className="bg-gradient-to-r from-blue-50/50 to-purple-50/50 backdrop-blur-sm rounded-xl md:rounded-2xl shadow-lg p-4 md:p-6 border border-blue-200/50">
+          <div className="flex items-center gap-2 md:gap-3 mb-4 md:mb-6">
+            {/* LOGO OFICIAL DO INSTAGRAM IGUAL AO FOOTER */}
+            <a 
+              href="https://www.instagram.com/santuariodefatima?igsh=eGZsMXppNDQ2dzhw" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="p-2 md:p-3 rounded-lg hover:opacity-80 transition-all hover:scale-110 transform duration-200 shadow flex items-center justify-center w-10 h-10 md:w-12 md:h-12 flex-shrink-0"
+              style={{
+                background: 'radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%)'
+              }}
+              title="Instagram do Santuário"
+              aria-label="Instagram"
+            >
+              <svg className="w-5 h-5 md:w-6 md:h-6" fill="white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+            </a>
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900">Instagram</h3>
+            {/* @santuariodefatima REMOVIDO */}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {instagramPosts.map((post) => (
+              <a
+                key={post.id}
+                href={post.permalink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group bg-white/70 backdrop-blur-sm rounded-lg md:rounded-xl overflow-hidden shadow hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border border-blue-100/50 hover:border-purple-300"
+              >
+                <div className="relative aspect-square bg-gradient-to-br from-blue-50/50 to-purple-50/50 overflow-hidden">
+                  <img
+                    src={post.media_url}
+                    alt="Instagram post"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute top-2 right-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
+                    <svg className="w-3 h-3 md:w-4 md:h-4 text-purple-600" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"></path>
+                    </svg>
+                  </div>
+                </div>
+                <div className="p-3 bg-transparent">
+                  <p className="text-xs md:text-sm text-gray-700 mb-2 line-clamp-2">{post.caption}</p>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <Heart className="w-3 h-3 md:w-4 md:h-4 text-pink-500" />
+                      <span>{Math.floor(Math.random() * 200) + 30} curtidas</span>
+                    </div>
+                    <span className="text-purple-600 font-medium text-xs">Ver mais</span>
+                  </div>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

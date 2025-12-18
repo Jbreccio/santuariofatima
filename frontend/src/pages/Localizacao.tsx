@@ -263,7 +263,6 @@ export default function Localizacao() {
               "Banheiros acessíveis",
               "Estacionamento para deficientes",
               "Elevador disponível",
-              "Sinalização em braile",
               "Assentos reservados para idosos e gestantes"
             ].map((item, index) => (
               <div key={index} className="flex items-center gap-3 text-gray-700 text-sm md:text-base">
