@@ -1,4 +1,4 @@
-// pages/MomentosLiturgicos.tsx — VERSÃO FINAL COM FALLBACK
+// pages/MomentosLiturgicos.tsx — VERSÃO CORRIGIDA COM ORDEM SOLICITADA
 import React, { useState, useEffect } from 'react';
 import Navigation from "../components/layout/Navigation";
 import Footer from "../components/layout/Footer";
@@ -35,20 +35,26 @@ interface EventoLiturgico {
   ativo: boolean;
 }
 
-// ✅ FALLBACK EMBUTIDO (sempre disponível)
+// ✅ FALLBACK EMBUTIDO — ORDEM CORRIGIDA EXATAMENTE COMO PEDIDO
 const DADOS_INICIAIS: EventoLiturgico[] = [
   {
-    id: 'cinzas-2025',
-    periodo: 'Cinzas',
-    cor: 'roxo',
-    tituloFaixa: 'CINZAS 2025',
-    imagens: ['/Cinzas1.png','/Cinzas02.png','/Cinzas03.png','/Cinzas4.png','/Cinzas5.png','/Cinzas6.png'],
+    id: 'solenidade-consagracao',
+    periodo: 'Renovação da Consagração ao Imaculado Coração de Maria',
+    cor: 'verde',
+    tituloFaixa: 'SOLENIDADE',
+    imagens: [
+      '/Solenidade-02.png',
+      '/Solenidade-03.png',
+      '/Solenidade-04.png',
+      '/Solenidade-05.png',
+      '/Solenidade-06.png'
+    ],
     ativo: true
   },
   {
     id: 'jubileu-2025',
     periodo: 'Jubileu',
-    cor: 'amarelo',
+    cor: 'verde',
     tituloFaixa: 'ANO JUBILAR 2025',
     imagens: ['/Jubileo.png','/Jubileo2.png','/Jubileo3.png','/Jubileo4.png','/Jubileo5.png','/Jubileo6.png'],
     ativo: true
@@ -59,6 +65,14 @@ const DADOS_INICIAIS: EventoLiturgico[] = [
     cor: 'vermelho',
     tituloFaixa: 'DOMINGO DE RAMOS 2025',
     imagens: ['/altarfrente.png','/snsf.png','/ramos01.png','/ramos02.png','/ramos03.png','/ramos04.png','/ramos05.png'],
+    ativo: true
+  },
+  {
+    id: 'cinzas-2025',
+    periodo: 'Cinzas',
+    cor: 'roxo',
+    tituloFaixa: 'QUARTA-FEIRA DE CINZAS 2025',
+    imagens: ['/Cinzas1.png','/Cinzas02.png','/Cinzas03.png','/Cinzas4.png','/Cinzas5.png','/Cinzas6.png'],
     ativo: true
   }
 ];
@@ -134,6 +148,23 @@ const CarrosselGenerico = ({
   );
 };
 
+// ✅ FUNÇÕES DE CORES
+const getCorGradiente = (cor: string): string => {
+  switch (cor) {
+    case 'roxo': return 'from-purple-900 to-purple-700';
+    case 'amarelo': return 'from-amber-600 to-orange-600';
+    case 'vermelho': return 'from-red-700 to-red-900';
+    case 'verde': return 'from-green-600 to-emerald-600';
+    case 'branco': return 'from-gray-100 to-gray-300';
+    case 'rosa': return 'from-pink-600 to-rose-700';
+    default: return 'from-gray-700 to-gray-900';
+  }
+};
+
+const getCorTexto = (cor: string): string => {
+  return cor === 'branco' ? 'text-gray-900' : 'text-white';
+};
+
 export default function MomentosLiturgicos() {
   const [recados, setRecados] = useState<Recado[]>([]);
   const [eventos, setEventos] = useState<Recado[]>([]);
@@ -150,14 +181,12 @@ export default function MomentosLiturgicos() {
           setRecados(recadosSalvos.filter((r: any) => r.ativo));
           setEventos(eventosSalvos?.filter((e: any) => e.ativo) || []);
         } else {
-          // ✅ USAR FALLBACK SE NÃO HOUVER DADOS
           setMomentosLiturgicos(DADOS_INICIAIS);
           setRecados([]);
           setEventos([]);
         }
       } catch (error) {
         console.error('Erro ao carregar dados:', error);
-        // ✅ EM CASO DE ERRO, USAR FALLBACK
         setMomentosLiturgicos(DADOS_INICIAIS);
         setRecados([]);
         setEventos([]);
@@ -168,7 +197,6 @@ export default function MomentosLiturgicos() {
 
     carregarDados();
 
-    // ✅ ESCUTAR ATUALIZAÇÕES DO PainelAdmin
     const aoAtualizar = () => carregarDados();
     window.addEventListener('dadosAtualizados', aoAtualizar);
     return () => window.removeEventListener('dadosAtualizados', aoAtualizar);
@@ -211,13 +239,17 @@ export default function MomentosLiturgicos() {
       </section>
 
       <main className="flex-grow max-w-7xl mx-auto px-4 py-8 w-full">
-        {/* RENDERIZAÇÃO DINÂMICA DE TODOS OS MOMENTOS */}
+        {/* RENDERIZAÇÃO DINÂMICA NA ORDEM CORRETA */}
         {momentosLiturgicos.map((momento) => (
           <section key={momento.id} className="mb-12">
             <div className="mb-6">
-              <div className={`bg-gradient-to-r ${momento.cor === 'roxo' ? 'from-purple-900 to-purple-700' : momento.cor === 'amarelo' ? 'from-amber-600 to-orange-600' : momento.cor === 'vermelho' ? 'from-red-700 to-red-900' : 'from-gray-700 to-gray-900'} rounded-xl p-6 shadow-lg`}>
-                <h1 className="text-3xl font-bold text-white mb-1">{momento.tituloFaixa}</h1>
-                <p className="text-lg text-white/90">{momento.periodo}</p>
+              <div className={`bg-gradient-to-r ${getCorGradiente(momento.cor)} rounded-xl p-6 shadow-lg`}>
+                <h1 className={`text-3xl font-bold ${getCorTexto(momento.cor)} mb-1`}>
+                  {momento.tituloFaixa}
+                </h1>
+                <p className={`text-lg ${getCorTexto(momento.cor)}/90`}>
+                  {momento.periodo}
+                </p>
               </div>
             </div>
             <CarrosselGenerico

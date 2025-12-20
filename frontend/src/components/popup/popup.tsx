@@ -45,10 +45,9 @@ export default function Popup() {
 
         if (popupsAtivos.length === 0) return;
 
-        const hoje = new Date().toDateString();
-        const fechadoHoje = localStorage.getItem('popupFechadoHoje') === hoje;
-        if (fechadoHoje) return;
-
+        // Sempre mostra o popup quando a página é carregada
+        // Remove qualquer verificação de sessão ou data anterior
+        
         setTimeout(() => {
           setPopupAtual(popupsAtivos[0]);
           setIndiceAtual(0);
@@ -86,8 +85,8 @@ export default function Popup() {
 
   const fecharPopup = () => {
     setMostrar(false);
-    const hoje = new Date().toDateString();
-    localStorage.setItem('popupFechadoHoje', hoje);
+    // Não salva no localStorage para que apareça novamente no próximo refresh
+    // Apenas fecha o popup na sessão atual
   };
 
   const avancarPopup = () => {

@@ -229,10 +229,10 @@ export default function TermosUso() {
                   Para questões sobre estes Termos ou reclamações:
                 </p>
                 <div className="space-y-2">
-                  <p><strong>E-mail:</strong> juridico@santuario-fatima.org</p>
-                  <p><strong>Telefone:</strong> (11) 1234-5678 (ramal 2)</p>
-                  <p><strong>Correspondência:</strong> Setor Jurídico, Santuário de Fátima, Av. Principal, 1234</p>
-                  <p><strong>Horário:</strong> Segunda a sexta, 9h às 17h</p>
+                  <p><strong>E-mail:</strong> santuarionsradefatima@santoamaro.org.brg</p>
+                  <p><strong>Telefone:</strong> (011) 5521-0312</p>
+                  <p><strong>Correspondência:</strong> Rua Darwin, 651 - Santo Amaro, CEP 04741-011 – São Paulo, SP</p>
+                  <p><strong>Horário:</strong> Terça à sexta, 08:30hs às 17:30h</p>
                 </div>
               </div>
             </section>

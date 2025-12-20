@@ -47,9 +47,8 @@ export default function Historia() {
           <h2 className="text-3xl font-bold mb-4 text-blue-600">História do Santuário Nossa Senhora de Fátima</h2>
           <div className="text-gray-700 space-y-4">
             <p>
-              O Santuario Nossa Senhora de Fátima foi fundada com o objetivo de servir a comunidade
-              local e propagar a fé católica. Desde sua criação, tem sido um espaço de encontro,
-              oração e comunidade.
+              O Santuário de Nossa Senhora de Fátima ( Santo Amaro ) foi fundado com o objetivo de servir a comunidade local e propagar a fé católica. 
+              Desde sua criação, tem sido um espaço de encontro, oração e vida comunitária.
             </p>
             <p>
               Ao longo dos anos, nossa paróquia cresceu e se desenvolveu, acompanhando as mudanças

@@ -915,7 +915,7 @@ export default function PainelAdmin() {
                           }`}
                           title={cor.descricao}
                         >
-                          <div 
+                          <div      
                             className={`w-full h-3 rounded ${
                               cor.id === 'verde' ? 'bg-green-600' :
                               cor.id === 'branco' ? 'bg-gray-200 border border-gray-300' :

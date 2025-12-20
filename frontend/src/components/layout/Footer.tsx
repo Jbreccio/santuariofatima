@@ -193,7 +193,7 @@ export default function Footer() {
                   <p className="text-gray-300 text-sm">
                     Rua Darwin, 651<br />
                     Santo Amaro<br />
-                    0474-1011 – São Paulo, SP
+                    04741-011 – São Paulo, SP
                   </p>
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function Footer() {
                     href="tel:+551155210812" 
                     className="text-gray-300 hover:text-white transition-colors text-sm"
                   >
-                    (11) 5521-0812
+                    (11) 5521-0321
                   </a>
                 </div>
               </div>
@@ -219,7 +219,7 @@ export default function Footer() {
                     href="mailto:santuariomsradefatima@santcamarco.org.br" 
                     className="text-gray-300 hover:text-white transition-colors text-sm"
                   >
-                    santuariomsradefatima@santcamarco.org.br
+                    santuarionsradefatima@santoamaro.org.br
                   </a>
                 </div>
               </div>

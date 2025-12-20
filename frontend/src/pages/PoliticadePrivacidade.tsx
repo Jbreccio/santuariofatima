@@ -139,10 +139,10 @@ export default function PoliticaPrivacidade() {
                   Para exercer seus direitos ou tirar dúvidas sobre privacidade:
                 </p>
                 <div className="space-y-2">
-                  <p><strong>E-mail:</strong> privacidade@santuario-fatima.org</p>
-                  <p><strong>Telefone:</strong> (11) 1234-5678</p>
-                  <p><strong>Endereço:</strong> Santuário de Fátima, Av. Principal, 1234 - Fátima/SP</p>
-                  <p><strong>Horário:</strong> Segunda a sexta, 9h às 17h</p>
+                  <p><strong>E-mail:</strong> santuarionsradefatima@santoamaro.org.brg</p>
+                  <p><strong>Telefone:</strong> (011) 5521-0312</p>
+                  <p><strong>Endereço:</strong> Rua Darwin, 651 Santo Amaro, CEP 04741-011 – São Paulo, SP</p>
+                  <p><strong>Horário:</strong> Tegunda à sexta, 08:30h às 17:30h</p>
                 </div>
               </div>
             </section>
