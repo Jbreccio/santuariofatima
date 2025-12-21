@@ -27,7 +27,7 @@ export default function Historia() {
                 Francisco Marto e Jacinta Marto.
               </p>
               <p>
-                Estas aparições deixaram uma mensagem de esperança, conversão e oração para o mundo.
+                Essas aparições deixaram uma mensagem de esperança, conversão e oração para o mundo.
                 A Virgem Maria pediu orações pelo fim da guerra e pela paz mundial.
               </p>
               <p>

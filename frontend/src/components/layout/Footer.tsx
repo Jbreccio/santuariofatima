@@ -17,7 +17,7 @@ export default function Footer() {
             <div className="flex flex-col items-center md:items-start">
               {/* Logo AUMENTADO */}
               <img 
-                src="/logo.png"
+                src="/brasao3.png"
                 alt="Santuário Nossa Senhora de Fátima" 
                 className="h-32 w-auto rounded-lg shadow-lg mb-4"
               />

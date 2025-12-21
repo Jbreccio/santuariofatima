@@ -1,5 +1,5 @@
-// frontend/src/components/popup/popup.tsx - VERSÃO RESPONSIVA
-import React, { useState, useEffect } from 'react';
+// frontend/src/components/popup/popup.tsx - VERSÃO COM REFRESH CORRIGIDO
+import React, { useState, useEffect, useRef } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface PopupItem {
@@ -16,6 +16,8 @@ export default function Popup() {
   const [indiceAtual, setIndiceAtual] = useState(0);
   const [mostrar, setMostrar] = useState(false);
   const [carregando, setCarregando] = useState(true);
+  
+  const jaMostrouRef = useRef(false);
 
   // Carregar popups do localStorage
   useEffect(() => {
@@ -45,16 +47,20 @@ export default function Popup() {
 
         if (popupsAtivos.length === 0) return;
 
-        // Sempre mostra o popup quando a página é carregada
-        // Remove qualquer verificação de sessão ou data anterior
-        
-        setTimeout(() => {
-          setPopupAtual(popupsAtivos[0]);
-          setIndiceAtual(0);
-          setMostrar(true);
-        }, 500);
+        // MOSTRAR O POPUP IMEDIATAMENTE NO CARREGAMENTO
+        if (popupsAtivos.length > 0 && !jaMostrouRef.current) {
+          // Pequeno delay para garantir que a página carregou
+          setTimeout(() => {
+            setPopupAtual(popupsAtivos[0]);
+            setIndiceAtual(0);
+            setMostrar(true);
+            jaMostrouRef.current = true;
+            console.log('✅ Popup exibido no refresh');
+          }, 100);
+        }
+
       } catch (error) {
-        console.error('Erro no popup:', error);
+        console.error('❌ Erro no popup:', error);
         setCarregando(false);
       }
     };
@@ -68,7 +74,10 @@ export default function Popup() {
     };
 
     window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, []);
 
   // Avança automaticamente
@@ -81,12 +90,11 @@ export default function Popup() {
     }, tempo * 1000);
 
     return () => clearTimeout(timer);
-  }, [mostrar, popupAtual]);
+  }, [mostrar, popupAtual, indiceAtual]);
 
   const fecharPopup = () => {
     setMostrar(false);
-    // Não salva no localStorage para que apareça novamente no próximo refresh
-    // Apenas fecha o popup na sessão atual
+    console.log('🔒 Popup fechado pelo usuário');
   };
 
   const avancarPopup = () => {
@@ -133,7 +141,7 @@ export default function Popup() {
         {/* IMAGEM + CONTROLES */}
         <div className="relative flex items-center justify-center p-2 sm:p-4">
 
-          {/* BOTÃO FECHAR (COLADO NA IMAGEM) */}
+          {/* BOTÃO FECHAR */}
           <button
             onClick={fecharPopup}
             className="absolute top-2 right-2 z-20 w-9 h-9 bg-black/70 text-white rounded-full flex items-center justify-center hover:bg-black/90 transition-colors backdrop-blur-sm"
