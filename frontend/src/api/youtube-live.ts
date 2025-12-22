@@ -1,72 +1,119 @@
-// frontend/api/youtube-live.js
-import Parser from 'rss-parser';
+// src/api/youtube-live.ts
+const YOUTUBE_API_KEY = import.meta.env.VITE_YOUTUBE_API_KEY;
+const YOUTUBE_CHANNEL_ID = 'UCwTM4qaQO3fsRpKAAZUZ8Ng';
 
-export default async function handler(req, res) {
-  const parser = new Parser();
-  
-  // SUBSTITUA pelo ID REAL do canal do Santuário de Fátima
-  // Como encontrar: https://commentpicker.com/youtube-channel-id.php
-  const CHANNEL_ID = 'UCwTM4qaQO3fsRpKAAZUZ8Ng';
-  
+export interface YouTubeVideo {
+  id: string;
+  title: string;
+  link: string;
+  published: string;
+  isLive: boolean;
+  isLiveNow: boolean;
+  liveBroadcastContent: 'live' | 'upcoming' | 'none';
+  thumbnail: string;
+  description: string;
+  viewCount?: string;
+}
+
+export async function fetchYouTubeVideos() {
   try {
-    const feed = await parser.parseURL(
-      `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`
-    );
+    // 1. Buscar lives ativas
+    const liveUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${YOUTUBE_CHANNEL_ID}&eventType=live&type=video&maxResults=2&key=${YOUTUBE_API_KEY}`;
     
-    // Processa os vídeos
-    const allVideos = feed.items.slice(0, 4).map(video => {
-      const videoId = video.id.split(':')[2];
-      return {
-        id: videoId,
-        title: video.title,
-        link: video.link,
-        published: video.pubDate,
-        isLive: video.title.toLowerCase().includes('live') || 
-                video.title.toLowerCase().includes('ao vivo') ||
-                video.title.toLowerCase().includes('direct'),
-        thumbnail: `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
-        description: video.contentSnippet?.substring(0, 100) + '...' || ''
-      };
+    // 2. Buscar últimos vídeos
+    const videosUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&channelId=${YOUTUBE_CHANNEL_ID}&order=date&type=video&maxResults=6&key=${YOUTUBE_API_KEY}`;
+    
+    const [liveRes, videosRes] = await Promise.all([
+      fetch(liveUrl),
+      fetch(videosUrl)
+    ]);
+    
+    const [liveData, videosData] = await Promise.all([
+      liveRes.json(),
+      videosRes.json()
+    ]);
+
+    const allVideos: YouTubeVideo[] = [];
+    let liveNow = false;
+    let currentLive: YouTubeVideo | null = null;
+
+    // Processar lives
+    if (liveData.items?.length > 0) {
+      const liveVideos = liveData.items.map((item: any) => {
+        const videoId = item.id.videoId;
+        const isCurrentlyLive = item.snippet.liveBroadcastContent === 'live';
+        
+        const video: YouTubeVideo = {
+          id: videoId,
+          title: item.snippet.title,
+          link: `https://youtube.com/watch?v=${videoId}`,
+          published: item.snippet.publishedAt,
+          isLive: true,
+          isLiveNow: isCurrentlyLive,
+          liveBroadcastContent: item.snippet.liveBroadcastContent,
+          thumbnail: item.snippet.thumbnails?.high?.url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+          description: item.snippet.description?.substring(0, 120) + '...' || ''
+        };
+        
+        if (isCurrentlyLive) {
+          liveNow = true;
+          currentLive = video;
+        }
+        
+        return video;
+      });
+      
+      allVideos.push(...liveVideos);
+    }
+
+    // Processar vídeos normais
+    if (videosData.items?.length > 0) {
+      const normalVideos = videosData.items
+        .filter((item: any) => item.id.videoId)
+        .slice(0, liveNow ? 4 : 6)
+        .map((item: any) => {
+          const videoId = item.id.videoId;
+          return {
+            id: videoId,
+            title: item.snippet.title,
+            link: `https://youtube.com/watch?v=${videoId}`,
+            published: item.snippet.publishedAt,
+            isLive: false,
+            isLiveNow: false,
+            liveBroadcastContent: 'none' as const,
+            thumbnail: item.snippet.thumbnails?.high?.url || `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`,
+            description: item.snippet.description?.substring(0, 100) + '...' || ''
+          };
+        });
+      
+      // Evitar duplicados
+      const existingIds = new Set(allVideos.map(v => v.id));
+      const uniqueVideos = normalVideos.filter(v => !existingIds.has(v.id));
+      allVideos.push(...uniqueVideos);
+    }
+
+    // Ordenar
+    allVideos.sort((a, b) => {
+      if (a.isLiveNow && !b.isLiveNow) return -1;
+      if (!a.isLiveNow && b.isLiveNow) return 1;
+      return new Date(b.published).getTime() - new Date(a.published).getTime();
     });
-    
-    // Verifica se há transmissão ao vivo AGORA
-    const liveNow = allVideos.filter(v => v.isLive).length > 0;
-    
-    res.json({
+
+    return {
       success: true,
       liveNow,
-      videos: allVideos,
-      channelTitle: feed.title,
+      currentLive,
+      videos: allVideos.slice(0, 6),
       lastUpdated: new Date().toISOString()
-    });
-    
+    };
+
   } catch (error) {
-    console.error('Erro YouTube RSS:', error);
-    
-    // Dados DEMO caso falhe
-    res.json({
+    console.error('Erro YouTube API:', error);
+    return {
       success: false,
       liveNow: false,
-      videos: [
-        {
-          id: 'demo1',
-          title: 'Missa no Santuário de Fátima - Demo',
-          link: '#',
-          isLive: false,
-          thumbnail: '/placeholder-youtube.jpg',
-          description: 'Demonstração do feed do YouTube'
-        },
-        {
-          id: 'demo2',
-          title: '🚨 AO VIVO AGORA: Missa Dominical',
-          link: '#',
-          isLive: true,
-          thumbnail: '/placeholder-live.jpg',
-          description: 'Transmissão ao vivo em andamento'
-        }
-      ],
-      channelTitle: 'Santuário de Fátima (Modo Demo)',
-      note: 'Configure o CHANNEL_ID para dados reais'
-    });
+      videos: [],
+      error: 'Falha ao carregar vídeos'
+    };
   }
-} 
+}

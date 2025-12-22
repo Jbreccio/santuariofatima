@@ -25,6 +25,8 @@ const DADOS_FIXOS: Slide[] = [
   { id: 'comunhao', imagem: '/images/carrosselFotos/comunhao.png', titulo: 'Comunhão' },
   { id: 'mesanino', imagem: '/images/carrosselFotos/mesanino.png', titulo: 'Mesanino' },
   { id: 'bible', imagem: '/images/carrosselFotos/bible.png', titulo: 'Bíblia' },
+  { id: 'altar', imagem: '/images/carrosselFotos/altar.png', titulo: 'Altar' },
+  { id: 'snsf', imagem: '/images/carrosselFotos/snsf.png', titulo: 'snsf' },
 ];
 
 export default function CarrosselFotos() {

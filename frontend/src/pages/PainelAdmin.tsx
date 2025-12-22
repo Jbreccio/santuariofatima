@@ -82,12 +82,10 @@ export default function PainelAdmin() {
     { id: 'cruzNovo', imagem: '/images/carrosselFotos/cruzNovo.png', titulo: 'Cruz Nova', ordem: 3, ativo: true },
     { id: 'cruzNovo2', imagem: '/images/carrosselFotos/cruzNovo2.png', titulo: 'Cruz Nova 2', ordem: 4, ativo: true },
     { id: 'rosto', imagem: '/images/carrosselFotos/Rosto.png', titulo: 'Rosto', ordem: 5, ativo: true },
-    { id: 'aerea', imagem: '/images/carrosselFotos/Aerea.png', titulo: 'Vista Aérea', ordem: 6, ativo: true },
+    { id: 'vstadecima', imagem: '/images/carrosselFotos/Vistadecima.png', titulo: 'Vista de Cima', ordem: 6, ativo: true },
     { id: 'entradaNovo2', imagem: '/images/carrosselFotos/entradaNovo2.png', titulo: 'Entrada Nova 2', ordem: 7, ativo: true },
     { id: 'entradaNovo', imagem: '/images/carrosselFotos/entradaNovo.png', titulo: 'Entrada Nova', ordem: 8, ativo: true },
-    { id: 'people', imagem: '/images/carrosselFotos/people.png', titulo: 'Pessoas', ordem: 9, ativo: true },
     { id: 'fachada1', imagem: '/images/carrosselFotos/fachada1.png', titulo: 'Fachada 1', ordem: 10, ativo: true },
-    { id: 'fachada2', imagem: '/images/carrosselFotos/fachada2.png', titulo: 'Fachada 2', ordem: 11, ativo: true },
     { id: 'terco', imagem: '/images/carrosselFotos/Terco.png', titulo: 'Terço', ordem: 12, ativo: true },
     { id: 'comunhao', imagem: '/images/carrosselFotos/comunhao.png', titulo: 'Comunhão', ordem: 13, ativo: true },
     { id: 'mesanino', imagem: '/images/carrosselFotos/mesanino.png', titulo: 'Mesanino', ordem: 14, ativo: true },
@@ -124,9 +122,9 @@ export default function PainelAdmin() {
 
   const [popups, setPopups] = useState<PopupItem[]>([
     { id: 'popup1', imagem: '/images/popup/popup001.png', tempoExibicao: 10, ativo: true, ordem: 0 },
-    { id: 'popup2', imagem: '/images/popup/popup002.png', tempoExibicao: 15, ativo: true, ordem: 1 },
-    { id: 'popup3', imagem: '/images/popup/popup003.png', tempoExibicao: 30, ativo: false, ordem: 2 },
-    { id: 'popup4', imagem: '/images/popup/popup004.png', tempoExibicao: 10, ativo: false, ordem: 3 }
+    { id: 'popup2', imagem: '/images/popup/popup002.png', tempoExibicao: 10, ativo: true, ordem: 1 },
+    { id: 'popup3', imagem: '/images/popup/popup003.png', tempoExibicao: 10, ativo: true, ordem: 2 },
+    { id: 'popup4', imagem: '/images/popup/popup004.png', tempoExibicao: 10, ativo: true, ordem: 3 }
   ]);
 
   const [recados, setRecados] = useState<RecadoItem[]>([]);
